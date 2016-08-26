@@ -2,6 +2,9 @@ package com.busysnail.filedownload.services;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 import com.busysnail.filedownload.db.ThreadDAO;
 import com.busysnail.filedownload.db.ThreadDAOImpl;
@@ -28,17 +31,20 @@ public class DownloadTask {
     private ThreadDAO mDao;
     private int mFinished=0;
     private boolean isPause=false;
+    private Handler mHandler;
 
     public DownloadTask(Context mContext, FileInfo mFileInfo) {
         this.mContext = mContext;
         this.mFileInfo = mFileInfo;
         mDao = new ThreadDAOImpl(mContext);
+
     }
 
     public void download(){
         //读取数据库的线程信息
         List<ThreadInfo> threadInfos=mDao.getThreads(mFileInfo.getUrl());
         ThreadInfo threadInfo=null;
+
         if(threadInfos.size()==0){
             //初次下载，初始化线程信息对象
             threadInfo=new ThreadInfo(0,mFileInfo.getUrl(),0,mFileInfo.getLength(),0);
@@ -47,6 +53,10 @@ public class DownloadTask {
         }
         //创建子线程进行下载
         new DownloadThread(threadInfo).start();
+    }
+
+    public void setPause(boolean pause) {
+        isPause = pause;
     }
 
     /**
@@ -93,8 +103,8 @@ public class DownloadTask {
 
                 //开始下载
                 Intent intent=new Intent(DownloadService.ACTION_UPDATE);
-                mFinished=mThreadInfo.getFinished();
-                if(connection.getResponseCode()==HttpURLConnection.HTTP_OK){
+                mFinished+=mThreadInfo.getFinished();
+                if(connection.getResponseCode()==HttpURLConnection.HTTP_PARTIAL){
                     input=connection.getInputStream();
                     byte[] buffer=new byte[1024*4];
                     int len=-1;
@@ -105,17 +115,18 @@ public class DownloadTask {
                         //把下载进度通过广播发送给Activity
                         mFinished+=len;
                         if(System.currentTimeMillis()-time>500){     //每500ms发送一次广播
-                            intent.putExtra("finished",mFinished*100/mFileInfo.getLength()); //完成百分比
+                            intent.putExtra(DownloadService.FINISHED_RATIO,mFinished*100/mThreadInfo.getEnd()); //完成百分比
                             mContext.sendBroadcast(intent);
                         }
                         //暂停时保存下载进度
                         if(isPause){
                             mDao.updateThread(mThreadInfo.getUrl(),mThreadInfo.getId(),mFinished);
+                            return;
                         }
-
                     }
                     //下载完成后，线程信息就没用了，可以删除
                     mDao.deleteThread(mThreadInfo.getUrl(),mThreadInfo.getId());
+
                 }
 
             } catch (Exception e) {
@@ -127,8 +138,6 @@ public class DownloadTask {
                 Util.closeQuietly(input);
                 Util.closeQuietly(randomAccessFile);
             }
-
-
 
         }
     }

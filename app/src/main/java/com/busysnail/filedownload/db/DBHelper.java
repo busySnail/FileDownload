@@ -12,17 +12,11 @@ public class DBHelper extends SQLiteOpenHelper {
     /**
      * 表对应Threadinfo类
      */
-    private static final String DB_NAME="download.db";
-    private static final int VERSION=1;
-    private static final String SQL_CREATE=" create table thread_info "+
-            "(_id integer primary key autoincrement," +
-            "thread_id integer," +
-            "url text,"+
-            "start integer,"+
-            "end integer,"+
-            "end integer,"+
-            "finished integer)";
-    private static final String SQL_DROP="drop if exists thread_info";
+    private static final String DB_NAME = "download.db";
+    private static final int VERSION = 1;
+    private static final String SQL_CREATE = "create table thread_info(_id integer primary key autoincrement," +
+            "thread_id integer, url text, start integer, end integer, finished integer)";
+    private static final String SQL_DROP = "drop table if exists thread_info";
 
 
 

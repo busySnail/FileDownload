@@ -1,28 +1,31 @@
 package com.busysnail.filedownload;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.DownloadListener;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.busysnail.filedownload.entity.FileInfo;
 import com.busysnail.filedownload.services.DownloadService;
+
+import org.w3c.dom.Text;
 
 public class MainActivity extends AppCompatActivity {
 
     private TextView mTvFilename;
     private ProgressBar mPbProgress;
-    private Button mBtStart;
-    private Button mBtStop;
+    private Button mBtnStart;
+    private Button mBtnStop;
+    private TextView mTvStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,50 +34,50 @@ public class MainActivity extends AppCompatActivity {
 
         mTvFilename = (TextView) findViewById(R.id.tv_filename);
         mPbProgress = (ProgressBar) findViewById(R.id.pb_progress);
-        mBtStart = (Button) findViewById(R.id.bt_start);
-        mBtStop = (Button) findViewById(R.id.bt_stop);
-
+        mBtnStart = (Button) findViewById(R.id.btn_start);
+        mBtnStop = (Button) findViewById(R.id.btn_stop);
+        mTvStatus= (TextView) findViewById(R.id.tv_status);
         mPbProgress.setMax(100);
+
 
         //创建文件对象
         final FileInfo fileInfo = new FileInfo(0,
-                "https://jcenter.bintray.com/com/android/tools/build/gradle/2.2.0-beta2/gradle-2.2.0-beta2.jar",
-                "gradle-2.2.0-beta2", 0, 0);
+                "http://www.imooc.com/mobile/imooc.apk",
+                "imooc.apk", 0, 0);
 
-        mBtStart.setOnClickListener(new View.OnClickListener() {
+        mTvFilename.setText(fileInfo.getFilename());
+
+        mBtnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, DownloadService.class);
                 intent.setAction(DownloadService.ACTION_START);
-                intent.putExtra("fileinfo", fileInfo);
+                intent.putExtra(DownloadService.FILEINFO, fileInfo);
                 startService(intent);
+                mTvStatus.setText("文件下载中...");
+
             }
 
         });
 
 
-        mBtStop.setOnClickListener(new View.OnClickListener() {
+        mBtnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, DownloadService.class);
                 intent.setAction(DownloadService.ACTION_STOP);
-                intent.putExtra("fileinfo", fileInfo);
+                intent.putExtra(DownloadService.FILEINFO, fileInfo);
                 startService(intent);
+                mTvStatus.setText("任务暂停");
             }
         });
 
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        //注册更新UI的广播接收器
+        IntentFilter filter=new IntentFilter();
+        filter.addAction(DownloadService.ACTION_UPDATE);
+        registerReceiver(mReceiver,filter);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
     }
 
     @Override
@@ -98,4 +101,23 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+    }
+
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
+                int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 0);
+                mPbProgress.setProgress(finished);
+                if(finished==100){
+                    mTvStatus.setText("文件下载成功");
+                }
+            }
+        }
+    };
 }

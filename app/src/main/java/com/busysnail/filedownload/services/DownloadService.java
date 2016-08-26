@@ -27,28 +27,33 @@ public class DownloadService extends Service {
     public static final String ACTION_STOP="ACTION_STOP";
     public static final String ACTION_UPDATE="ACTION_UPDATE";
     public static final String DOWNLOAD_PATH= Environment.getExternalStorageDirectory().getAbsolutePath()+"/downloads/";
+    public static final String FINISHED_RATIO="FINISHED_RATIO";
+    public static final String FILEINFO="FILEINFO";
     public static final int MSG_INIT=0;
+    private DownloadTask mTask;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //获得activity传来的参数
         if(ACTION_START.equals(intent.getAction())){
-            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra("fileinfo");
+            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
             Log.i("test","start "+fileInfo.toString());
+            if(mTask!=null){
+                mTask.setPause(false);
+            }
             //启动初始化线程
             new InitThread(fileInfo).start();
         }else if(ACTION_STOP.equals(intent.getAction())){
-            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra("fileinfo");
+            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
             Log.i("test","stop "+fileInfo.toString());
+            if(mTask!=null){
+                mTask.setPause(true);
+            }
         }
         return super.onStartCommand(intent,flags,startId);
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+
 
     Handler mHandler=new Handler(){
         @Override
@@ -57,6 +62,12 @@ public class DownloadService extends Service {
                 case MSG_INIT:
                     FileInfo fileInfo= (FileInfo) msg.obj;
                     Log.i("test","Init:"+fileInfo);
+                    //启动下载任务
+                    mTask=new DownloadTask(DownloadService.this,fileInfo);
+                    mTask.download();
+
+                    break;
+                default:
                     break;
             }
 
@@ -116,5 +127,11 @@ public class DownloadService extends Service {
             }
 
         }
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 }
