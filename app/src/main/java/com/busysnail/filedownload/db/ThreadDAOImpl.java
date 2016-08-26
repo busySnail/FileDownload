@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.busysnail.filedownload.entity.ThreadInfo;
+import com.busysnail.filedownload.utils.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class ThreadDAOImpl implements ThreadDAO {
         db.execSQL("insert into thread_info(thread_id,url,start,end,finished) values(?,?,?,?,?)",
                 new Object[]{threadInfo.getId(), threadInfo.getUrl(), threadInfo.getStart(), threadInfo.getEnd(), threadInfo.getFinished()});
 
-        db.close();
+        Util.closeQuietly(db);
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ThreadDAOImpl implements ThreadDAO {
         db.execSQL("delete from thread_info where url = ? and thread_id = ?",
                 new String[]{url, String.valueOf(thread_id)});
 
-        db.close();
+        Util.closeQuietly(db);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class ThreadDAOImpl implements ThreadDAO {
         db.execSQL("update thread_info set finished = ? where url = ? and thread_id = ?",
                 new String[]{String.valueOf(finishded), url, String.valueOf(thread_id)});
 
-        db.close();
+        Util.closeQuietly(db);
 
     }
 
@@ -57,9 +58,11 @@ public class ThreadDAOImpl implements ThreadDAO {
     public List<ThreadInfo> getThreads(String url) {
         List<ThreadInfo> result=new ArrayList<>();
         SQLiteDatabase db = mHelper.getWritableDatabase();
+
         Cursor cursor = db.rawQuery("select * from thread_info where url = ?", new String[]{url});
         while (cursor.moveToNext()){
             ThreadInfo threadInfo=new ThreadInfo();
+
             threadInfo.setId(cursor.getInt(cursor.getColumnIndex("thread_id")));
             threadInfo.setUrl(cursor.getString(cursor.getColumnIndex("url")));
             threadInfo.setStart(cursor.getInt(cursor.getColumnIndex("start")));
@@ -69,8 +72,8 @@ public class ThreadDAOImpl implements ThreadDAO {
             result.add(threadInfo);
         }
 
-        cursor.close();
-        db.close();
+        Util.closeQuietly(cursor);
+        Util.closeQuietly(db);
         return result;
     }
 
@@ -81,8 +84,8 @@ public class ThreadDAOImpl implements ThreadDAO {
                 new String[]{url, String.valueOf(thread_id)});
 
         boolean exists=cursor.moveToNext();
-        cursor.close();
-        db.close();
+        Util.closeQuietly(cursor);
+        Util.closeQuietly(db);
         return exists;
     }
 }

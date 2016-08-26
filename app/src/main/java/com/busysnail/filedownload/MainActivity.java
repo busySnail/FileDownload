@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
         mBtStart = (Button) findViewById(R.id.bt_start);
         mBtStop = (Button) findViewById(R.id.bt_stop);
 
+        mPbProgress.setMax(100);
+
         //创建文件对象
         final FileInfo fileInfo = new FileInfo(0,
                 "https://jcenter.bintray.com/com/android/tools/build/gradle/2.2.0-beta2/gradle-2.2.0-beta2.jar",

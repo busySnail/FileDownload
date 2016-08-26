@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.busysnail.filedownload.entity.FileInfo;
+import com.busysnail.filedownload.utils.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +25,8 @@ public class DownloadService extends Service {
 
     public static final String ACTION_START="ACTION_START";
     public static final String ACTION_STOP="ACTION_STOP";
-    private static final String DOWNLOAD_PATH= Environment.getExternalStorageDirectory().getAbsolutePath()+"/downloads/";
+    public static final String ACTION_UPDATE="ACTION_UPDATE";
+    public static final String DOWNLOAD_PATH= Environment.getExternalStorageDirectory().getAbsolutePath()+"/downloads/";
     public static final int MSG_INIT=0;
 
     @Override
@@ -109,13 +111,8 @@ public class DownloadService extends Service {
                 if(connection!=null){
                     connection.disconnect();
                 }
-                if(randomAccessFile!=null){
-                    try {
-                        randomAccessFile.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+                Util.closeQuietly(randomAccessFile);
+
             }
 
         }
