@@ -18,11 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.zip.InflaterOutputStream;
 
-/**
- * author: malong on 2016/8/26
- * email: malong_ilp@163.com
- * address: Xidian University
- */
+
 
 public class DownloadService extends Service {
 
