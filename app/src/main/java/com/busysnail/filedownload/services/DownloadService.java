@@ -26,6 +26,7 @@ public class DownloadService extends Service {
     public static final String ACTION_START="ACTION_START";
     public static final String ACTION_STOP="ACTION_STOP";
     public static final String ACTION_UPDATE="ACTION_UPDATE";
+    public static final String ACTION_FINISHED="ACTION_FINISHED";
     public static final String DOWNLOAD_PATH= Environment.getExternalStorageDirectory().getAbsolutePath()+"/downloads/";
     public static final String FINISHED_RATIO="FINISHED_RATIO";
     public static final String FILEINFO="FILEINFO";
