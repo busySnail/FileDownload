@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -47,6 +48,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         mLvFile = (ListView) findViewById(R.id.lv_file);
+        Toolbar toolbar= (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.toolbar_title);
+        toolbar.setSubtitle(R.string.toolbar_subtitle);
+        setSupportActionBar(toolbar);
+
     }
 
     private void initReceiver() {
@@ -122,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 //下载成功，更新进度为0
                 FileInfo fileInfo = (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
                 mAdapter.updateProgress(fileInfo.getId(), 0);
-                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n"+"存储位置："+DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
 
             }
         }

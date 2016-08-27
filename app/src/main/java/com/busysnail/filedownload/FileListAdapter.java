@@ -82,6 +82,8 @@ public class FileListAdapter extends BaseAdapter
 		holder.mBtnStart.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				holder.mBtnStart.setEnabled(false);
+				holder.mBtnStop.setEnabled(true);
 				holder.mTvProgress.setVisibility(View.VISIBLE);
 				Intent intent = new Intent(mContext, DownloadService.class);
 				intent.setAction(DownloadService.ACTION_START);
@@ -93,6 +95,8 @@ public class FileListAdapter extends BaseAdapter
 		holder.mBtnStop.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				holder.mBtnStop.setEnabled(false);
+				holder.mBtnStart.setEnabled(true);
 				Intent intent = new Intent(mContext, DownloadService.class);
 				intent.setAction(DownloadService.ACTION_STOP);
 				intent.putExtra(DownloadService.FILEINFO, fileInfo);

@@ -147,7 +147,6 @@ public class DownloadTask {
                             intent.putExtra(DownloadService.FILE_ID,mFileInfo.getId()); //下载文件ID，区分不同任务更新界面不同progressbar
                             intent.putExtra(DownloadService.FINISHED_RATIO, f); //完成百分比
                             mContext.sendBroadcast(intent);
-
                         }
                         //暂停时保存下载进度
                         if (isPause) {

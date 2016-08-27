@@ -3,4 +3,6 @@
     <string name="action_settings">设置</string>
     <string name="download_start">开始</string>
     <string name="download_pause">暂停</string>
+    <string name="toolbar_title">简单文件下载</string>
+    <string name="toolbar_subtitle">多任务多线程HTTP断点续传</string>
 </resources>
