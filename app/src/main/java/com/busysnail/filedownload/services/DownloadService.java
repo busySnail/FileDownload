@@ -45,11 +45,12 @@ public class DownloadService extends Service {
         DownloadTask task=mTasks.get(fileInfo.getId());
 
         if(ACTION_START.equals(intent.getAction())){
-            if(task!=null){
-                task.setPause(false);
-            }
+//            if(task!=null){
+//                task.setPause(false);
+//            }
             //启动初始化线程
             InitThread thread= new InitThread(fileInfo);
+            thread.setPriority(Thread.MIN_PRIORITY);
             DownloadTask.sThreadPool.execute(thread);
         }else if(ACTION_STOP.equals(intent.getAction())){
             if(task!=null){
@@ -103,7 +104,7 @@ public class DownloadService extends Service {
                 //连接网络文件
                 URL url=new URL(mFileInfo.getUrl());
                 connection= (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(3000);
+                connection.setConnectTimeout(5000);
                 connection.setRequestMethod("GET");
                 int length=-1;
                 if(connection.getResponseCode()==HttpURLConnection.HTTP_OK){

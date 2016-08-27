@@ -11,15 +11,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.busysnail.filedownload.entity.FileInfo;
 import com.busysnail.filedownload.services.DownloadService;
 
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +24,9 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
 
-    private RecyclerView mRvFile;
+    private ListView mLvFile;
     private List<FileInfo> mFileList;
-    private RecyclerFileAdapter mAdapter;
+    private FileListAdapter mAdapter;
 
 
     @Override
@@ -38,11 +35,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        mRvFile= (RecyclerView) findViewById(R.id.rv_file);
-        mFileList=new ArrayList<>();
+        mLvFile = (ListView) findViewById(R.id.lv_file);
+        mFileList = new ArrayList<>();
 
         //创建文件对象
-      FileInfo fileInfo1 = new FileInfo(0,
+        FileInfo fileInfo1 = new FileInfo(0,
                 "http://www.imooc.com/mobile/imooc.apk",
                 "1imooc.apk", 0, 0);
         FileInfo fileInfo2 = new FileInfo(1,
@@ -61,46 +58,23 @@ public class MainActivity extends AppCompatActivity {
         mFileList.add(fileInfo4);
 
 
-//
-//        mBtnStart.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
-//                intent.setAction(DownloadService.ACTION_START);
-//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
-//                startService(intent);
-//                mTvStatus.setText("文件下载中...");
-//
-//            }
-//
-//        });
-//
-//
-//        mBtnStop.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
-//                intent.setAction(DownloadService.ACTION_STOP);
-//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
-//                startService(intent);
-//                mTvStatus.setText("任务暂停");
-//            }
-//        });
-
-         mAdapter=new RecyclerFileAdapter(this,mFileList);
-
-        mRvFile.setLayoutManager(new LinearLayoutManager(this));
-
-        mRvFile.setAdapter(mAdapter);
-
+        mAdapter = new FileListAdapter(this, mFileList);
+        mLvFile.setAdapter(mAdapter);
 
 
         //注册更新UI的广播接收器
-        IntentFilter filter=new IntentFilter();
+        IntentFilter filter = new IntentFilter();
         filter.addAction(DownloadService.ACTION_UPDATE);
         filter.addAction(DownloadService.ACTION_FINISHED);
-        registerReceiver(mReceiver,filter);
+        registerReceiver(mReceiver, filter);
 
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -125,28 +99,22 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
-    }
-
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
                 int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 0);
-                int fileId=intent.getIntExtra(DownloadService.FILE_ID,0);
-                mAdapter.updateProgress(fileId,finished);
+                int fileId = intent.getIntExtra(DownloadService.FILE_ID, 0);
+                mAdapter.updateProgress(fileId, finished);
 //                mPbProgress.setProgress(finished);
 //                if(finished==100){
 //                    mTvStatus.setText("文件下载成功");
 //                }
-            }else if(DownloadService.ACTION_FINISHED.equals(intent.getAction())){
+            } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
                 //下载成功，更新进度为0
-                FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
-                mAdapter.updateProgress(fileInfo.getId(),0);
-                Toast.makeText(MainActivity.this,mFileList.get(fileInfo.getId()).getFilename()+"下载完毕",Toast.LENGTH_SHORT).show();
+                FileInfo fileInfo = (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
+                mAdapter.updateProgress(fileInfo.getId(), 0);
+                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕", Toast.LENGTH_SHORT).show();
 
             }
         }

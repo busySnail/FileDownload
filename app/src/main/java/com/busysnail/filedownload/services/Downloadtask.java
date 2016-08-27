@@ -33,11 +33,10 @@ public class DownloadTask {
     private FileInfo mFileInfo;
     private ThreadDAO mDao;
     private int mFinished = 0;
-    private boolean isPause = false;
+    private volatile boolean isPause = false;
     private int mThreadCount=1;
     private List<DownloadThread> mDownloadThreadList;
     public static ExecutorService sThreadPool= Executors.newCachedThreadPool();
-
 
     public DownloadTask(Context mContext, FileInfo mFileInfo,int mThreadCount) {
         this.mContext = mContext;
@@ -50,23 +49,13 @@ public class DownloadTask {
     public void download() {
         //读取数据库的线程信息
         List<ThreadInfo> threadInfos = mDao.getThreads(mFileInfo.getUrl());
-//        ThreadInfo threadInfo = null;
-//
-//        if (threadInfos.size() == 0) {
-//            //初次下载，初始化线程信息对象
-//            threadInfo = new ThreadInfo(0, mFileInfo.getUrl(), 0, mFileInfo.getLength(), 0);
-//        } else {
-//            threadInfo = threadInfos.get(0);
-//        }
-//        //创建子线程进行下载
-//        new DownloadThread(threadInfo).start();
-
+        ThreadInfo threadInfo=null;
         if(threadInfos.size()==0){
             //计算每个线程下载的长度
             int length=mFileInfo.getLength()/mThreadCount;
             for(int i=0;i<mThreadCount;i++){
                 //创建分段下载线程信息
-                ThreadInfo threadInfo=new ThreadInfo(i,mFileInfo.getUrl(),length*i,(i+1)*length-1,0);
+                 threadInfo=new ThreadInfo(i,mFileInfo.getUrl(),length*i,(i+1)*length-1,0);
                //最后一个线程下载剩余所有的长度
                 if(i==mThreadCount-1){
                     threadInfo.setEnd(mFileInfo.getLength());
@@ -81,7 +70,7 @@ public class DownloadTask {
         //启动多个线程进行下载
         for(ThreadInfo info:threadInfos){
             DownloadThread thread=new DownloadThread(info);
-//            thread.start();
+            thread.setPriority(Thread.MIN_PRIORITY);
             DownloadTask.sThreadPool.execute(thread);
             mDownloadThreadList.add(thread);
         }
@@ -96,7 +85,7 @@ public class DownloadTask {
      */
     class DownloadThread extends Thread {
         private ThreadInfo mThreadInfo;
-        //县城是否执行完毕
+        //线程是否执行完毕
         public boolean isFinished=false;
 
         public DownloadThread(ThreadInfo mThreadInfo) {
@@ -106,11 +95,10 @@ public class DownloadTask {
         @Override
         public void run() {
 
-
-
             HttpURLConnection connection = null;
             RandomAccessFile randomAccessFile = null;
             InputStream input = null;
+
             try {
                 URL url = new URL(mThreadInfo.getUrl());
                 connection = (HttpURLConnection) url.openConnection();
@@ -148,10 +136,18 @@ public class DownloadTask {
                         mFinished += len;
                         //累加每个线程完成的进度
                         mThreadInfo.setFinished(mThreadInfo.getFinished()+len);
-                        if (System.currentTimeMillis() - time > 1000) {     //每500ms发送一次广播
+                        if (System.currentTimeMillis() - time > 1500) {//每1000ms发送一次广播
+//                            time=System.currentTimeMillis();
+                            int f=mFinished*100/mFileInfo.getLength();
+//                            if(f>mFileInfo.getFinished()){
+//                                intent.putExtra(DownloadService.FILE_ID,mFileInfo.getId()); //下载文件ID，区分不同任务更新界面不同progressbar
+//                                intent.putExtra(DownloadService.FINISHED_RATIO, f); //完成百分比
+//                                mContext.sendBroadcast(intent);
+//                            }
                             intent.putExtra(DownloadService.FILE_ID,mFileInfo.getId()); //下载文件ID，区分不同任务更新界面不同progressbar
-                            intent.putExtra(DownloadService.FINISHED_RATIO, mFinished * 100 / mThreadInfo.getEnd()); //完成百分比
+                            intent.putExtra(DownloadService.FINISHED_RATIO, f); //完成百分比
                             mContext.sendBroadcast(intent);
+
                         }
                         //暂停时保存下载进度
                         if (isPause) {
@@ -185,7 +181,7 @@ public class DownloadTask {
     private synchronized void checkAllThreadsFinished(){
         boolean allFinished=true;
         for(DownloadThread thread:mDownloadThreadList){
-            if(thread.isFinished==false)
+            if(!thread.isFinished)
                 allFinished=false;
             break;
         }
