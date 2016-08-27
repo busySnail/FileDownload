@@ -45,7 +45,7 @@ public class ThreadDAOImpl implements ThreadDAO {
     }
 
     @Override
-    public synchronized  void updateThread(String url, int thread_id, int finished) {
+    public synchronized  void updateThread(String url, int thread_id, long finished) {
         SQLiteDatabase db = mHelper.getWritableDatabase();
         db.execSQL("update thread_info set finished = ? where url = ? and thread_id = ?",
                 new Object[]{finished, url, thread_id});

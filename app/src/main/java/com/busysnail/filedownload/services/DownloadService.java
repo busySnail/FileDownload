@@ -34,6 +34,7 @@ public class DownloadService extends Service {
     public static final String FILE_ID="FILE_ID";
     public static final String FILEINFO="FILEINFO";
     public static final int MSG_INIT=0;
+    public static final int THREAD_COUNT=3;
 //    private DownloadTask mTask;
     //下载任务的集合 <文件ID，下载任务>
     private Map<Integer,DownloadTask> mTasks=new LinkedHashMap<>();
@@ -42,7 +43,6 @@ public class DownloadService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         //获得activity传来的参数
         FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
-        DownloadTask task=mTasks.get(fileInfo.getId());
 
         if(ACTION_START.equals(intent.getAction())){
 //            if(task!=null){
@@ -50,9 +50,10 @@ public class DownloadService extends Service {
 //            }
             //启动初始化线程
             InitThread thread= new InitThread(fileInfo);
-            thread.setPriority(Thread.MIN_PRIORITY);
-            DownloadTask.sThreadPool.execute(thread);
+            thread.start();
+
         }else if(ACTION_STOP.equals(intent.getAction())){
+            DownloadTask task=mTasks.get(fileInfo.getId());
             if(task!=null){
                 task.setPause(true);
             }
@@ -72,11 +73,10 @@ public class DownloadService extends Service {
                     //启动下载任务
 //                    mTask=new DownloadTask(DownloadService.this,fileInfo);
 //                    mTask.download();
-                    DownloadTask task=new DownloadTask(DownloadService.this,fileInfo,3);
+                    DownloadTask task=new DownloadTask(DownloadService.this,fileInfo,THREAD_COUNT);
                     task.download();
                     //把下载任务添加到集合中
                     mTasks.put(fileInfo.getId(),task);
-
                     break;
                 default:
                     break;

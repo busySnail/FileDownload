@@ -28,7 +28,7 @@ public interface ThreadDAO {
      * @param thread_id
      * @param finishded
      */
-    void updateThread(String url,int thread_id,int finishded);
+    void updateThread(String url,int thread_id,long finishded);
 
     /**
      * 查询文件的线程信息

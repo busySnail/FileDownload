@@ -12,13 +12,13 @@ public class FileInfo implements Serializable{
     private int id;
     private String url;
     private String filename;
-    private int length;
-    private int finished;
+    private long length;
+    private long finished;
 
     public FileInfo() {
     }
 
-    public FileInfo(int id, String url, String filename, int length, int finished) {
+    public FileInfo(int id, String url, String filename, long length, long finished) {
         this.id = id;
         this.url = url;
         this.filename = filename;
@@ -61,19 +61,19 @@ public class FileInfo implements Serializable{
         this.filename = filename;
     }
 
-    public int getLength() {
+    public long getLength() {
         return length;
     }
 
-    public void setLength(int length) {
+    public void setLength(long length) {
         this.length = length;
     }
 
-    public int getFinished() {
+    public long getFinished() {
         return finished;
     }
 
-    public void setFinished(int finished) {
+    public void setFinished(long finished) {
         this.finished = finished;
     }
 }

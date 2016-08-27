@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 import com.busysnail.filedownload.db.ThreadDAO;
 import com.busysnail.filedownload.db.ThreadDAOImpl;
@@ -32,9 +33,9 @@ public class DownloadTask {
     private Context mContext;
     private FileInfo mFileInfo;
     private ThreadDAO mDao;
-    private int mFinished = 0;
-    private volatile boolean isPause = false;
-    private int mThreadCount=1;
+    private long mFinished = 0;
+    private  boolean isPause = false;
+    private int mThreadCount=DownloadService.THREAD_COUNT;
     private List<DownloadThread> mDownloadThreadList;
     public static ExecutorService sThreadPool= Executors.newCachedThreadPool();
 
@@ -52,7 +53,7 @@ public class DownloadTask {
         ThreadInfo threadInfo=null;
         if(threadInfos.size()==0){
             //计算每个线程下载的长度
-            int length=mFileInfo.getLength()/mThreadCount;
+            long length=mFileInfo.getLength()/mThreadCount;
             for(int i=0;i<mThreadCount;i++){
                 //创建分段下载线程信息
                  threadInfo=new ThreadInfo(i,mFileInfo.getUrl(),length*i,(i+1)*length-1,0);
@@ -106,7 +107,7 @@ public class DownloadTask {
                 connection.setRequestMethod("GET");
 
                 //设置下载位置
-                int start = mThreadInfo.getStart() + mThreadInfo.getFinished();
+                long start = mThreadInfo.getStart() + mThreadInfo.getFinished();
                 /**
                  * 设置资源请求范围
                  * Server通过请求头中的Range: bytes=0-xxx来判断是否是做Range请求，如果这个值存在而且有效，则只发回请求的那部分文件内容，
@@ -123,6 +124,7 @@ public class DownloadTask {
                 //开始下载
                 Intent intent = new Intent(DownloadService.ACTION_UPDATE);
                 mFinished += mThreadInfo.getFinished();
+
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_PARTIAL) {
                     input = connection.getInputStream();
                     byte[] buffer = new byte[1024 * 4];
@@ -136,14 +138,12 @@ public class DownloadTask {
                         mFinished += len;
                         //累加每个线程完成的进度
                         mThreadInfo.setFinished(mThreadInfo.getFinished()+len);
-                        if (System.currentTimeMillis() - time > 1500) {//每1000ms发送一次广播
-//                            time=System.currentTimeMillis();
-                            int f=mFinished*100/mFileInfo.getLength();
-//                            if(f>mFileInfo.getFinished()){
-//                                intent.putExtra(DownloadService.FILE_ID,mFileInfo.getId()); //下载文件ID，区分不同任务更新界面不同progressbar
-//                                intent.putExtra(DownloadService.FINISHED_RATIO, f); //完成百分比
-//                                mContext.sendBroadcast(intent);
-//                            }
+                        if (System.currentTimeMillis() - time > 1000) {//每1000ms发送一次广播
+                            time=System.currentTimeMillis();
+                            //这里踩过的坑，f如果设置为long，那么传入putExtra会被截断，小整数总会被截断为0，使得进度更新失败
+                            int f= (int) (mFinished*100/mFileInfo.getLength());
+                            Log.i("busysnail","downloadtask finished :"+f);
+
                             intent.putExtra(DownloadService.FILE_ID,mFileInfo.getId()); //下载文件ID，区分不同任务更新界面不同progressbar
                             intent.putExtra(DownloadService.FINISHED_RATIO, f); //完成百分比
                             mContext.sendBroadcast(intent);
