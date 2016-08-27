@@ -49,7 +49,8 @@ public class DownloadService extends Service {
                 task.setPause(false);
             }
             //启动初始化线程
-            new InitThread(fileInfo).start();
+            InitThread thread= new InitThread(fileInfo);
+            DownloadTask.sThreadPool.execute(thread);
         }else if(ACTION_STOP.equals(intent.getAction())){
             if(task!=null){
                 task.setPause(true);

@@ -21,6 +21,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 下载任务类
@@ -34,6 +36,7 @@ public class DownloadTask {
     private boolean isPause = false;
     private int mThreadCount=1;
     private List<DownloadThread> mDownloadThreadList;
+    public static ExecutorService sThreadPool= Executors.newCachedThreadPool();
 
 
     public DownloadTask(Context mContext, FileInfo mFileInfo,int mThreadCount) {
@@ -59,23 +62,27 @@ public class DownloadTask {
 //        new DownloadThread(threadInfo).start();
 
         if(threadInfos.size()==0){
-            //获得每个线程下载的长度
+            //计算每个线程下载的长度
             int length=mFileInfo.getLength()/mThreadCount;
             for(int i=0;i<mThreadCount;i++){
                 //创建分段下载线程信息
                 ThreadInfo threadInfo=new ThreadInfo(i,mFileInfo.getUrl(),length*i,(i+1)*length-1,0);
+               //最后一个线程下载剩余所有的长度
                 if(i==mThreadCount-1){
                     threadInfo.setEnd(mFileInfo.getLength());
                 }
                 //添加到线程信息集合
                 threadInfos.add(threadInfo);
+                mDao.insertThread(threadInfo);
+
             }
         }
         mDownloadThreadList=new ArrayList<>();
         //启动多个线程进行下载
         for(ThreadInfo info:threadInfos){
             DownloadThread thread=new DownloadThread(info);
-            thread.start();
+//            thread.start();
+            DownloadTask.sThreadPool.execute(thread);
             mDownloadThreadList.add(thread);
         }
     }
@@ -99,10 +106,7 @@ public class DownloadTask {
         @Override
         public void run() {
 
-            //像数据库插入线程信息
-            if (!mDao.isExists(mThreadInfo.getUrl(), mThreadInfo.getId())) {
-                mDao.insertThread(mThreadInfo);
-            }
+
 
             HttpURLConnection connection = null;
             RandomAccessFile randomAccessFile = null;
@@ -110,7 +114,7 @@ public class DownloadTask {
             try {
                 URL url = new URL(mThreadInfo.getUrl());
                 connection = (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(3000);
+                connection.setConnectTimeout(5000);
                 connection.setRequestMethod("GET");
 
                 //设置下载位置
@@ -144,7 +148,8 @@ public class DownloadTask {
                         mFinished += len;
                         //累加每个线程完成的进度
                         mThreadInfo.setFinished(mThreadInfo.getFinished()+len);
-                        if (System.currentTimeMillis() - time > 500) {     //每500ms发送一次广播
+                        if (System.currentTimeMillis() - time > 1000) {     //每500ms发送一次广播
+                            intent.putExtra(DownloadService.FILE_ID,mFileInfo.getId()); //下载文件ID，区分不同任务更新界面不同progressbar
                             intent.putExtra(DownloadService.FINISHED_RATIO, mFinished * 100 / mThreadInfo.getEnd()); //完成百分比
                             mContext.sendBroadcast(intent);
                         }
@@ -156,8 +161,7 @@ public class DownloadTask {
                     }
                     //标识线程执行完毕
                     isFinished=true;
-                    //下载完成后，线程信息就没用了，可以删除
-                    mDao.deleteThread(mThreadInfo.getUrl(), mThreadInfo.getId());
+
                     checkAllThreadsFinished();
 
                 }
@@ -187,6 +191,8 @@ public class DownloadTask {
         }
 
         if(allFinished){
+            //下载完成后，线程信息就没用了，可以删除
+            mDao.deleteThread(mFileInfo.getUrl());
             //发送广播通知UI下载任务结束
             Intent intent=new Intent(DownloadService.ACTION_FINISHED);
             intent.putExtra(DownloadService.FILEINFO,mFileInfo);
