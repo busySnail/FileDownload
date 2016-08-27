@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,58 +21,97 @@ import com.busysnail.filedownload.services.DownloadService;
 
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mTvFilename;
-    private ProgressBar mPbProgress;
-    private Button mBtnStart;
-    private Button mBtnStop;
-    private TextView mTvStatus;
+
+    private RecyclerView mRvFile;
+    private List<FileInfo> mFileList;
+    private RecyclerFileAdapter mAdapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTvFilename = (TextView) findViewById(R.id.tv_filename);
-        mPbProgress = (ProgressBar) findViewById(R.id.pb_progress);
-        mBtnStart = (Button) findViewById(R.id.btn_start);
-        mBtnStop = (Button) findViewById(R.id.btn_stop);
-        mTvStatus= (TextView) findViewById(R.id.tv_status);
-        mPbProgress.setMax(100);
 
+        mRvFile= (RecyclerView) findViewById(R.id.rv_file);
+        mFileList=new ArrayList<>();
 
         //创建文件对象
-        final FileInfo fileInfo = new FileInfo(0,
+      FileInfo fileInfo1 = new FileInfo(0,
                 "http://www.imooc.com/mobile/imooc.apk",
-                "imooc.apk", 0, 0);
+                "1imooc.apk", 0, 0);
+        FileInfo fileInfo2 = new FileInfo(1,
+                "http://www.imooc.com/mobile/imooc.apk",
+                "2imooc.apk", 0, 0);
+        FileInfo fileInfo3 = new FileInfo(2,
+                "http://www.imooc.com/mobile/imooc.apk",
+                "3imooc.apk", 0, 0);
+        FileInfo fileInfo4 = new FileInfo(3,
+                "http://www.imooc.com/mobile/imooc.apk",
+                "4imooc.apk", 0, 0);
 
-        mTvFilename.setText(fileInfo.getFilename());
-
-        mBtnStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, DownloadService.class);
-                intent.setAction(DownloadService.ACTION_START);
-                intent.putExtra(DownloadService.FILEINFO, fileInfo);
-                startService(intent);
-                mTvStatus.setText("文件下载中...");
-
-            }
-
-        });
+        mFileList.add(fileInfo1);
+        mFileList.add(fileInfo2);
+        mFileList.add(fileInfo3);
+        mFileList.add(fileInfo4);
 
 
-        mBtnStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, DownloadService.class);
-                intent.setAction(DownloadService.ACTION_STOP);
-                intent.putExtra(DownloadService.FILEINFO, fileInfo);
-                startService(intent);
-                mTvStatus.setText("任务暂停");
-            }
-        });
+//
+//        mBtnStart.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
+//                intent.setAction(DownloadService.ACTION_START);
+//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
+//                startService(intent);
+//                mTvStatus.setText("文件下载中...");
+//
+//            }
+//
+//        });
+//
+//
+//        mBtnStop.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
+//                intent.setAction(DownloadService.ACTION_STOP);
+//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
+//                startService(intent);
+//                mTvStatus.setText("任务暂停");
+//            }
+//        });
+
+         mAdapter=new RecyclerFileAdapter(this,mFileList);
+//        mAdapter.setItemClickListener(new RecyclerFileAdapter.OnItemClickListener() {
+//            @Override
+//            public void onStartBtnClicked() {
+//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
+//                intent.setAction(DownloadService.ACTION_START);
+//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
+//                startService(intent);
+//
+//            }
+//
+//            @Override
+//            public void onStopBtnClicked() {
+//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
+//                intent.setAction(DownloadService.ACTION_STOP);
+//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
+//                startService(intent);
+//
+//            }
+//        });
+
+        mRvFile.setLayoutManager(new LinearLayoutManager(this));
+
+        mRvFile.setAdapter(mAdapter);
+
 
 
         //注册更新UI的广播接收器
@@ -113,10 +154,10 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
                 int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 0);
-                mPbProgress.setProgress(finished);
-                if(finished==100){
-                    mTvStatus.setText("文件下载成功");
-                }
+//                mPbProgress.setProgress(finished);
+//                if(finished==100){
+//                    mTvStatus.setText("文件下载成功");
+//                }
             }
         }
     };
