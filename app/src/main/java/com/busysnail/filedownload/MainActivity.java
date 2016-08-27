@@ -88,25 +88,6 @@ public class MainActivity extends AppCompatActivity {
 //        });
 
          mAdapter=new RecyclerFileAdapter(this,mFileList);
-//        mAdapter.setItemClickListener(new RecyclerFileAdapter.OnItemClickListener() {
-//            @Override
-//            public void onStartBtnClicked() {
-//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
-//                intent.setAction(DownloadService.ACTION_START);
-//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
-//                startService(intent);
-//
-//            }
-//
-//            @Override
-//            public void onStopBtnClicked() {
-//                Intent intent = new Intent(MainActivity.this, DownloadService.class);
-//                intent.setAction(DownloadService.ACTION_STOP);
-//                intent.putExtra(DownloadService.FILEINFO, fileInfo);
-//                startService(intent);
-//
-//            }
-//        });
 
         mRvFile.setLayoutManager(new LinearLayoutManager(this));
 
@@ -117,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
         //注册更新UI的广播接收器
         IntentFilter filter=new IntentFilter();
         filter.addAction(DownloadService.ACTION_UPDATE);
+        filter.addAction(DownloadService.ACTION_FINISHED);
         registerReceiver(mReceiver,filter);
 
     }
@@ -154,10 +136,18 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
                 int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 0);
+                int fileId=intent.getIntExtra(DownloadService.FILE_ID,0);
+                mAdapter.updateProgress(fileId,finished);
 //                mPbProgress.setProgress(finished);
 //                if(finished==100){
 //                    mTvStatus.setText("文件下载成功");
 //                }
+            }else if(DownloadService.ACTION_FINISHED.equals(intent.getAction())){
+                //下载成功，更新进度为0
+                FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
+                mAdapter.updateProgress(fileInfo.getId(),0);
+                Toast.makeText(MainActivity.this,mFileList.get(fileInfo.getId()).getFilename()+"下载完毕",Toast.LENGTH_SHORT).show();
+
             }
         }
     };

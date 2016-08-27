@@ -17,10 +17,10 @@ import java.util.List;
 
 public class ThreadDAOImpl implements ThreadDAO {
 
-    DBHelper mHelper;
+    private DBHelper mHelper;
 
     public ThreadDAOImpl(Context context) {
-        mHelper = new DBHelper(context);
+        mHelper = DBHelper.getInstance(context);
     }
 
 

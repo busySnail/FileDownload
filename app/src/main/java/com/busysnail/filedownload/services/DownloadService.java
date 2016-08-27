@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.zip.InflaterOutputStream;
 
 
@@ -29,26 +31,28 @@ public class DownloadService extends Service {
     public static final String ACTION_FINISHED="ACTION_FINISHED";
     public static final String DOWNLOAD_PATH= Environment.getExternalStorageDirectory().getAbsolutePath()+"/downloads/";
     public static final String FINISHED_RATIO="FINISHED_RATIO";
+    public static final String FILE_ID="FILE_ID";
     public static final String FILEINFO="FILEINFO";
     public static final int MSG_INIT=0;
-    private DownloadTask mTask;
+//    private DownloadTask mTask;
+    //下载任务的集合 <文件ID，下载任务>
+    private Map<Integer,DownloadTask> mTasks=new LinkedHashMap<>();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //获得activity传来的参数
+        FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
+        DownloadTask task=mTasks.get(fileInfo.getId());
+
         if(ACTION_START.equals(intent.getAction())){
-            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
-            Log.i("test","start "+fileInfo.toString());
-            if(mTask!=null){
-                mTask.setPause(false);
+            if(task!=null){
+                task.setPause(false);
             }
             //启动初始化线程
             new InitThread(fileInfo).start();
         }else if(ACTION_STOP.equals(intent.getAction())){
-            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
-            Log.i("test","stop "+fileInfo.toString());
-            if(mTask!=null){
-                mTask.setPause(true);
+            if(task!=null){
+                task.setPause(true);
             }
         }
         return super.onStartCommand(intent,flags,startId);
@@ -64,8 +68,12 @@ public class DownloadService extends Service {
                     FileInfo fileInfo= (FileInfo) msg.obj;
                     Log.i("test","Init:"+fileInfo);
                     //启动下载任务
-                    mTask=new DownloadTask(DownloadService.this,fileInfo);
-                    mTask.download();
+//                    mTask=new DownloadTask(DownloadService.this,fileInfo);
+//                    mTask.download();
+                    DownloadTask task=new DownloadTask(DownloadService.this,fileInfo,3);
+                    task.download();
+                    //把下载任务添加到集合中
+                    mTasks.put(fileInfo.getId(),task);
 
                     break;
                 default:

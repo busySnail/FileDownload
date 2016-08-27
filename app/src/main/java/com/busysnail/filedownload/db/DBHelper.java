@@ -6,8 +6,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 
 
-public class DBHelper extends SQLiteOpenHelper {
+ class DBHelper extends SQLiteOpenHelper {
 
+    private static Context mContext;
 
     /**
      * 表对应Threadinfo类
@@ -18,24 +19,29 @@ public class DBHelper extends SQLiteOpenHelper {
             "thread_id integer, url text, start integer, end integer, finished integer)";
     private static final String SQL_DROP = "drop table if exists thread_info";
 
-
-
-
-    public DBHelper(Context context) {
+    private DBHelper(Context context) {
         super(context, DB_NAME, null, VERSION);
+    }
+    /**
+     * 静态内部类实现单例模式
+     */
+    private static class SingletonHolder{
+        private static final DBHelper sInstance=new DBHelper(mContext);
+    }
+
+     static DBHelper getInstance(Context context){
+        mContext=context;
+        return SingletonHolder.sInstance;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE);
-
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(SQL_DROP);
         db.execSQL(SQL_CREATE);
-
-
     }
 }

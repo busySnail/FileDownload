@@ -1,6 +1,7 @@
 package com.busysnail.filedownload;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.busysnail.filedownload.entity.FileInfo;
+import com.busysnail.filedownload.services.DownloadService;
 
 import java.util.List;
 
@@ -23,11 +25,6 @@ public class RecyclerFileAdapter extends RecyclerView.Adapter<RecyclerFileAdapte
 
     private Context mContext;
     private List<FileInfo> mFileList;
-    private OnItemClickListener itemClickListener;
-
-
-
-
 
     public RecyclerFileAdapter(Context mContext, List<FileInfo> mFileList) {
         this.mContext = mContext;
@@ -69,34 +66,42 @@ public class RecyclerFileAdapter extends RecyclerView.Adapter<RecyclerFileAdapte
 
             mPbProgress.setMax(100);
 
+        }
+
+        public void bind(final FileInfo fileInfo){
+            mTvFilename.setText(fileInfo.getFilename());
+            mPbProgress.setProgress(fileInfo.getFinished());
             mBtnStart.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    itemClickListener.onStartBtnClicked();
+                    Intent intent = new Intent(mContext, DownloadService.class);
+                    intent.setAction(DownloadService.ACTION_START);
+                    intent.putExtra(DownloadService.FILEINFO,fileInfo);
+                    mContext.startService(intent);
                 }
             });
             mBtnStop.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    itemClickListener.onStopBtnClicked();
+                    Intent intent = new Intent(mContext, DownloadService.class);
+                    intent.setAction(DownloadService.ACTION_STOP);
+                    intent.putExtra(DownloadService.FILEINFO, fileInfo);
+                    mContext.startService(intent);
                 }
             });
-
-        }
-
-        public void bind(FileInfo fileInfo){
-            mTvFilename.setText(fileInfo.getFilename());
-            mPbProgress.setProgress(fileInfo.getFinished());
         }
     }
 
-    interface OnItemClickListener {
-        void onStartBtnClicked();
-        void onStopBtnClicked();
-    }
 
-    public void setItemClickListener(OnItemClickListener itemClickListener) {
-        this.itemClickListener = itemClickListener;
+    /**
+     * 更新列表相中的进度条
+     * @param id
+     * @param progress
+     */
+    public void updateProgress(int id,int progress){
+        FileInfo fileInfo=mFileList.get(id);
+        fileInfo.setFinished(progress);
+        notifyDataSetChanged();
     }
 
 }
