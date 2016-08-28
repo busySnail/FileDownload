@@ -15,7 +15,7 @@ import java.util.List;
  *
  */
 
-public class ThreadDAOImpl implements ThreadDAO {
+public class ThreadDAOImpl implements IThreadDAO {
 
     private DBHelper mHelper;
 

@@ -2,23 +2,18 @@ package com.busysnail.filedownload.services;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 
-import com.busysnail.filedownload.db.ThreadDAO;
+import com.busysnail.filedownload.db.IThreadDAO;
 import com.busysnail.filedownload.db.ThreadDAOImpl;
 import com.busysnail.filedownload.entity.FileInfo;
 import com.busysnail.filedownload.entity.ThreadInfo;
 import com.busysnail.filedownload.utils.Util;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +27,7 @@ import java.util.concurrent.Executors;
 public class DownloadTask {
     private Context mContext;
     private FileInfo mFileInfo;
-    private ThreadDAO mDao;
+    private IThreadDAO mDao;
     private long mFinished = 0;
     private  boolean isPause = false;
     private int mThreadCount=DownloadService.THREAD_COUNT;

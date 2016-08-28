@@ -62,11 +62,11 @@ public class FileListAdapter extends BaseAdapter
 			
 			holder = new ViewHolder();
 
-			holder.mTvFileName = (TextView) convertView.findViewById(R.id.name);
-			holder.mTvProgress = (TextView) convertView.findViewById(R.id.pro_text);
-			holder.mBtnStart = (Button) convertView.findViewById(R.id.start);
-			holder.mBtnStop = (Button) convertView.findViewById(R.id.pause);
-			holder.mPbProgress = (ProgressBar) convertView.findViewById(R.id.progressBar);
+			holder.mTvFileName = (TextView) convertView.findViewById(R.id.tv_filename);
+			holder.mTvProgress = (TextView) convertView.findViewById(R.id.tv_progress);
+			holder.mBtnStart = (Button) convertView.findViewById(R.id.btn_start);
+			holder.mBtnStop = (Button) convertView.findViewById(R.id.btn_stop);
+			holder.mPbProgress = (ProgressBar) convertView.findViewById(R.id.pb_progressbar);
 
 			holder.mTvFileName.setText(fileInfo.getFilename());
 

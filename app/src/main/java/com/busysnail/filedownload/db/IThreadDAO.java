@@ -8,7 +8,7 @@ import java.util.List;
  */
 
 
-public interface ThreadDAO {
+public interface IThreadDAO {
 
     /**
      * 插入线程消息
