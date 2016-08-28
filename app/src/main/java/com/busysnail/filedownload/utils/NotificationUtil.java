@@ -61,13 +61,13 @@ public class NotificationUtil {
             intentStart.setAction(DownloadService.ACTION_START);
             intentStart.putExtra(DownloadService.FILEINFO,fileInfo);
             PendingIntent piStart=PendingIntent.getActivity(mContext,0,intentStart,0);
-            remoteViews.setOnClickPendingIntent(R.id.btn_start,piStart);
+            remoteViews.setOnClickPendingIntent(R.id.notify_btn_start,piStart);
 
             Intent intentStop=new Intent(mContext, DownloadService.class);
             intentStart.setAction(DownloadService.ACTION_STOP);
             intentStart.putExtra(DownloadService.FILEINFO,fileInfo);
             PendingIntent piStop=PendingIntent.getActivity(mContext,0,intentStop,0);
-            remoteViews.setOnClickPendingIntent(R.id.btn_stop,piStop);
+            remoteViews.setOnClickPendingIntent(R.id.notify_btn_stop,piStop);
             //将RemoteViews设置到notification
             notification.contentView=remoteViews;
             //发出通知，并加入集合
@@ -75,6 +75,7 @@ public class NotificationUtil {
             mNotifications.put(fileInfo.getId(),notification);
 
         }
+
     }
 
     public void cancelNotification(int id){
@@ -85,7 +86,8 @@ public class NotificationUtil {
     public void updateNotification(int id,int progress){
         Notification notification=mNotifications.get(id);
         if(notification!=null){
-            notification.contentView.setProgressBar(R.id.pb_progressbar,100,progress,false);
+            notification.contentView.setProgressBar(R.id.notify_pb_progressbar,100,progress,false);
+            notification.contentView.setTextViewText(R.id.notify_tv_progress,progress+"%");
         }
         //修改完重新发一遍
         mNotificationManager.notify(id,notification);

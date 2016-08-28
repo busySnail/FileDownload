@@ -71,12 +71,14 @@ public class DownloadService extends Service {
                     FileInfo fileInfo= (FileInfo) msg.obj;
                     Log.i("test","Init:"+fileInfo);
                     //启动下载任务
-//                    mTask=new DownloadTask(DownloadService.this,fileInfo);
-//                    mTask.download();
                     DownloadTask task=new DownloadTask(DownloadService.this,fileInfo,THREAD_COUNT);
                     task.download();
                     //把下载任务添加到集合中
                     mTasks.put(fileInfo.getId(),task);
+                    //发送启动命令的广播
+                    Intent intent=new Intent(DownloadService.ACTION_START);
+                    intent.putExtra(DownloadService.FILEINFO,fileInfo);
+                    sendBroadcast(intent);
                     break;
                 default:
                     break;

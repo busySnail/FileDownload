@@ -18,8 +18,10 @@ import android.widget.Toast;
 
 import com.busysnail.filedownload.entity.FileInfo;
 import com.busysnail.filedownload.services.DownloadService;
+import com.busysnail.filedownload.utils.NotificationUtil;
 
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView mLvFile;
     private List<FileInfo> mFileList;
     private FileListAdapter mAdapter;
+    private NotificationUtil mNotificationUtil;
 
 
     @Override
@@ -44,11 +47,13 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new FileListAdapter(this, mFileList);
         mLvFile.setAdapter(mAdapter);
 
+        mNotificationUtil=new NotificationUtil(this);
+
     }
 
     private void initViews() {
         mLvFile = (ListView) findViewById(R.id.lv_file);
-        Toolbar toolbar= (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.toolbar_title);
         toolbar.setSubtitle(R.string.toolbar_subtitle);
         setSupportActionBar(toolbar);
@@ -58,12 +63,13 @@ public class MainActivity extends AppCompatActivity {
     private void initReceiver() {
         //注册更新UI的广播接收器
         IntentFilter filter = new IntentFilter();
+        filter.addAction(DownloadService.ACTION_START);
         filter.addAction(DownloadService.ACTION_UPDATE);
         filter.addAction(DownloadService.ACTION_FINISHED);
         registerReceiver(mReceiver, filter);
     }
 
-    void initData(){
+    void initData() {
 
         mFileList = new ArrayList<>();
 
@@ -127,20 +133,25 @@ public class MainActivity extends AppCompatActivity {
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
+            if (DownloadService.ACTION_START.equals(intent.getAction())) {
+                FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
+                mNotificationUtil.showNotification(fileInfo);
+
+            } else if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
                 int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 10);
-                Log.i("busysnail","MainActivity finished: "+finished+"");
+                Log.i("busysnail", "MainActivity finished: " + finished + "");
                 int fileId = intent.getIntExtra(DownloadService.FILE_ID, 0);
                 mAdapter.updateProgress(fileId, finished);
-//                mPbProgress.setProgress(finished);
-//                if(finished==100){
-//                    mTvStatus.setText("文件下载成功");
-//                }
+                //更新通知
+                mNotificationUtil.updateNotification(fileId,finished);
             } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
                 //下载成功，更新进度为0
                 FileInfo fileInfo = (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
                 mAdapter.updateProgress(fileInfo.getId(), 0);
-                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n"+"存储位置："+DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
+
+                //取消通知
+                mNotificationUtil.cancelNotification(fileInfo.getId());
 
             }
         }
