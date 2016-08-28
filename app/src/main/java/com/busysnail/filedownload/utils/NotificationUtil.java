@@ -56,6 +56,8 @@ public class NotificationUtil {
             notification.contentIntent=pendingIntent;
             //创建RemoteViews
             RemoteViews remoteViews=new RemoteViews(mContext.getPackageName(),R.layout.notification);
+            //设置textview
+            remoteViews.setTextViewText(R.id.notify_tv_filename,fileInfo.getFilename());
             //设置按钮操作
             Intent intentStart=new Intent(mContext, DownloadService.class);
             intentStart.setAction(DownloadService.ACTION_START);

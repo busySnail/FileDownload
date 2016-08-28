@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.busysnail.filedownload.entity.FileInfo;
 import com.busysnail.filedownload.services.DownloadService;
+import com.busysnail.filedownload.services.DownloadTask;
 
 import java.util.List;
 
@@ -101,7 +102,6 @@ public class FileListAdapter extends BaseAdapter
 				intent.setAction(DownloadService.ACTION_STOP);
 				intent.putExtra(DownloadService.FILEINFO, fileInfo);
 				mContext.startService(intent);
-
 			}
 		});
 

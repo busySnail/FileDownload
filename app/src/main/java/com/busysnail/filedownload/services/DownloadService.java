@@ -51,7 +51,6 @@ public class DownloadService extends Service {
             //启动初始化线程
             InitThread thread= new InitThread(fileInfo);
             thread.start();
-
         }else if(ACTION_STOP.equals(intent.getAction())){
             DownloadTask task=mTasks.get(fileInfo.getId());
             if(task!=null){
