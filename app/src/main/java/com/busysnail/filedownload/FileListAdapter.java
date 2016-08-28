@@ -2,6 +2,10 @@ package com.busysnail.filedownload;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +25,8 @@ public class FileListAdapter extends BaseAdapter
 	private Context mContext;
 	private List<FileInfo> mFileList;
 	private LayoutInflater mInflater;
+    private Messenger mMessenger;
+    private final String TAG="busysnail";
 	
 	public FileListAdapter(Context context, List<FileInfo> fileInfos)
 	{
@@ -28,6 +34,11 @@ public class FileListAdapter extends BaseAdapter
 		this.mFileList = fileInfos;
 		this.mInflater=LayoutInflater.from(mContext);
 	}
+
+    public void setMessenger(Messenger mMessenger){
+        Log.i(TAG,"适配器接收Servicehandler");
+        this.mMessenger=mMessenger;
+    }
 	
 	/**
 	 * @see android.widget.Adapter#getCount()
@@ -86,22 +97,39 @@ public class FileListAdapter extends BaseAdapter
 				holder.mBtnStart.setEnabled(false);
 				holder.mBtnStop.setEnabled(true);
 				holder.mTvProgress.setVisibility(View.VISIBLE);
-				Intent intent = new Intent(mContext, DownloadService.class);
-				intent.setAction(DownloadService.ACTION_START);
-				intent.putExtra(DownloadService.FILEINFO,fileInfo);
-				mContext.startService(intent);
-
-			}
+//				Intent intent = new Intent(mContext, DownloadService.class);
+//				intent.setAction(DownloadService.ACTION_START);
+//				intent.putExtra(DownloadService.FILEINFO,fileInfo);
+//				mContext.startService(intent);
+                Message msg=new Message();
+                msg.what=DownloadService.MSG_START;
+                msg.obj=fileInfo;
+                Log.i(TAG,"适配器Start按钮发送 MSG_START");
+                try {
+                    mMessenger.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
 		});
 		holder.mBtnStop.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				holder.mBtnStop.setEnabled(false);
 				holder.mBtnStart.setEnabled(true);
-				Intent intent = new Intent(mContext, DownloadService.class);
-				intent.setAction(DownloadService.ACTION_STOP);
-				intent.putExtra(DownloadService.FILEINFO, fileInfo);
-				mContext.startService(intent);
+//				Intent intent = new Intent(mContext, DownloadService.class);
+//				intent.setAction(DownloadService.ACTION_STOP);
+//				intent.putExtra(DownloadService.FILEINFO, fileInfo);
+//				mContext.startService(intent);
+                Message msg=new Message();
+                msg.what=DownloadService.MSG_STOP;
+                msg.obj=fileInfo;
+                Log.i(TAG,"适配器Start按钮发送 MSG_START");
+                try {
+                    mMessenger.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
 			}
 		});
 
@@ -111,9 +139,9 @@ public class FileListAdapter extends BaseAdapter
 
 	public void updateProgress(int id, int progress)
 	{
-		FileInfo fileInfo = mFileList.get(id);
-		fileInfo.setFinished(progress);
-		notifyDataSetChanged();
+            FileInfo fileInfo = mFileList.get(id);
+            fileInfo.setFinished(progress);
+            notifyDataSetChanged();
 	}
 	
 	private static class ViewHolder

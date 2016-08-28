@@ -1,10 +1,17 @@
 package com.busysnail.filedownload;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -32,6 +39,41 @@ public class MainActivity extends AppCompatActivity {
     private List<FileInfo> mFileList;
     private FileListAdapter mAdapter;
     private NotificationUtil mNotificationUtil;
+    private Messenger mServiceMessenger;
+   private final String TAG="busysnail";
+
+    Handler mHandler=new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            FileInfo fileInfo=null;
+            switch (msg.what){
+                case DownloadService.MSG_UPDATE:
+                    int finished =msg.arg1;
+                    int fileId = msg.arg2;
+                    mAdapter.updateProgress(fileId, finished);
+                    //更新通知
+                    mNotificationUtil.updateNotification(fileId,finished);
+                    break;
+                case DownloadService.MSG_FINISHED:
+                    //下载成功，更新进度为0
+                     fileInfo = (FileInfo) msg.obj;
+                    mAdapter.updateProgress(fileInfo.getId(), 0);
+                    Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
+
+                    //取消通知
+                    mNotificationUtil.cancelNotification(fileInfo.getId());
+                    break;
+                case DownloadService.MSG_START:
+
+                    fileInfo = (FileInfo) msg.obj;
+                    Log.i(TAG,"接收服务开始下载的MSG_START，显示通知:(FileInfo) msg.obj:"+fileInfo);
+                    mNotificationUtil.showNotification(fileInfo);
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
 
     @Override
@@ -39,17 +81,48 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         initData();
         initViews();
-        initReceiver();
+//        initReceiver();
 
         mAdapter = new FileListAdapter(this, mFileList);
         mLvFile.setAdapter(mAdapter);
 
         mNotificationUtil=new NotificationUtil(this);
+        //绑定Service
+        Intent intent=new Intent(this,DownloadService.class);
+        Log.i(TAG,"绑定服务");
+        bindService(intent,mConnection, DownloadService.BIND_AUTO_CREATE);
 
     }
+
+    ServiceConnection mConnection=new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mServiceMessenger=new Messenger(service);
+            Log.i(TAG,"接收ServiceHandler");
+            //传给适配器
+            mAdapter.setMessenger(mServiceMessenger);
+            //创建Activity中的messenger
+            Messenger messenger=new Messenger(mHandler);
+            //创建Message
+            Message msg=new Message();
+            msg.what=DownloadService.MSG_BIND;
+            msg.replyTo=messenger;
+            Log.i(TAG,"发送ActivityMessenger");
+            //使用Service的Messenger发送Activity中的Messenger
+            try {
+                mServiceMessenger.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     private void initViews() {
         mLvFile = (ListView) findViewById(R.id.lv_file);
@@ -60,14 +133,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void initReceiver() {
-        //注册更新UI的广播接收器
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(DownloadService.ACTION_START);
-        filter.addAction(DownloadService.ACTION_UPDATE);
-        filter.addAction(DownloadService.ACTION_FINISHED);
-        registerReceiver(mReceiver, filter);
-    }
+//    private void initReceiver() {
+//        //注册更新UI的广播接收器
+//        IntentFilter filter = new IntentFilter();
+//        filter.addAction(DownloadService.ACTION_START);
+//        filter.addAction(DownloadService.ACTION_UPDATE);
+//        filter.addAction(DownloadService.ACTION_FINISHED);
+//        registerReceiver(mReceiver, filter);
+//    }
 
     void initData() {
 
@@ -101,12 +174,12 @@ public class MainActivity extends AppCompatActivity {
 //        mFileList.add(fileInfo8);
     }
 
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
-    }
+//
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        unregisterReceiver(mReceiver);
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -130,30 +203,30 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (DownloadService.ACTION_START.equals(intent.getAction())) {
-                FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
-                mNotificationUtil.showNotification(fileInfo);
-
-            } else if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
-                int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 10);
-                Log.i("busysnail", "MainActivity finished: " + finished + "");
-                int fileId = intent.getIntExtra(DownloadService.FILE_ID, 0);
-                mAdapter.updateProgress(fileId, finished);
-                //更新通知
-                mNotificationUtil.updateNotification(fileId,finished);
-            } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
-                //下载成功，更新进度为0
-                FileInfo fileInfo = (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
-                mAdapter.updateProgress(fileInfo.getId(), 0);
-                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
-
-                //取消通知
-                mNotificationUtil.cancelNotification(fileInfo.getId());
-
-            }
-        }
-    };
+//    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            if (DownloadService.ACTION_START.equals(intent.getAction())) {
+//                FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
+//                mNotificationUtil.showNotification(fileInfo);
+//
+//            } else if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
+//                int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 0);
+//                Log.i("busysnail", "MainActivity finished: " + finished + "");
+//                int fileId = intent.getIntExtra(DownloadService.FILE_ID, 0);
+//                mAdapter.updateProgress(fileId, finished);
+//                //更新通知
+//                mNotificationUtil.updateNotification(fileId,finished);
+//            } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
+//                //下载成功，更新进度为0
+//                FileInfo fileInfo = (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
+//                mAdapter.updateProgress(fileInfo.getId(), 0);
+//                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
+//
+//                //取消通知
+//                mNotificationUtil.cancelNotification(fileInfo.getId());
+//
+//            }
+//        }
+//    };
 }
