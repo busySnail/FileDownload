@@ -51,6 +51,7 @@ public class NotificationUtil {
             //通知特性，自动消失
             notification.flags=Notification.FLAG_AUTO_CANCEL;
             //点击通知栏的操作
+            notification.sound=null;
             Intent intent=new Intent(mContext, MainActivity.class);
             PendingIntent pendingIntent=PendingIntent.getActivity(mContext,0,intent,0);
             notification.contentIntent=pendingIntent;
