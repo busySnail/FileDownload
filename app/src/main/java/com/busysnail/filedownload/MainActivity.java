@@ -35,9 +35,10 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
 
-    private ListView mLvFile;
+    private RecyclerView mLvFile;
     private List<FileInfo> mFileList;
-    private FileListAdapter mAdapter;
+//    private FileListAdapter mAdapter;
+    private RecyclerAdapter mAdapter;
     private NotificationUtil mNotificationUtil;
     private Messenger mServiceMessenger;
    private final String TAG="busysnail";
@@ -85,7 +86,9 @@ public class MainActivity extends AppCompatActivity {
         initViews();
 //        initReceiver();
 
-        mAdapter = new FileListAdapter(this, mFileList);
+//        mAdapter = new FileListAdapter(this, mFileList);
+        mAdapter=new RecyclerAdapter(this,mFileList);
+        mLvFile.setLayoutManager(new LinearLayoutManager(this));
         mLvFile.setAdapter(mAdapter);
 
         mNotificationUtil=new NotificationUtil(this);
@@ -125,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void initViews() {
-        mLvFile = (ListView) findViewById(R.id.lv_file);
+        mLvFile = (RecyclerView) findViewById(R.id.lv_file);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.toolbar_title);
         toolbar.setSubtitle(R.string.toolbar_subtitle);
@@ -156,22 +159,10 @@ public class MainActivity extends AppCompatActivity {
         FileInfo fileInfo4 = new FileInfo(3, "http://www.imooc.com/download/Activator.exe",
                 "Activator.exe", 0, 0);
 
-//        FileInfo fileInfo5 = new FileInfo(4, "http://dldir1.qq.com/weixin/android/weixin6316android780.apk",
-//                "weixin1.apk", 0, 0);
-//        FileInfo fileInfo6 = new FileInfo(5, "http://111.202.99.12/sqdd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk",
-//                "qq1.apk", 0, 0);
-//        FileInfo fileInfo7 = new FileInfo(6, "http://www.imooc.com/mobile/imooc.apk",
-//                "imooc1.apk", 0, 0);
-//        FileInfo fileInfo8 = new FileInfo(7, "http://www.imooc.com/download/Activator.exe",
-//                "Activator1.exe", 0, 0);
         mFileList.add(fileInfo1);
         mFileList.add(fileInfo2);
         mFileList.add(fileInfo3);
         mFileList.add(fileInfo4);
-//        mFileList.add(fileInfo5);
-//        mFileList.add(fileInfo6);
-//        mFileList.add(fileInfo7);
-//        mFileList.add(fileInfo8);
     }
 
 //
