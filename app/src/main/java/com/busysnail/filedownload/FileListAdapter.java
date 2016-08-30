@@ -117,10 +117,6 @@ public class FileListAdapter extends BaseAdapter
 			public void onClick(View v) {
 				holder.mBtnStop.setEnabled(false);
 				holder.mBtnStart.setEnabled(true);
-//				Intent intent = new Intent(mContext, DownloadService.class);
-//				intent.setAction(DownloadService.ACTION_STOP);
-//				intent.putExtra(DownloadService.FILEINFO, fileInfo);
-//				mContext.startService(intent);
                 Message msg=new Message();
                 msg.what=DownloadService.MSG_STOP;
                 msg.obj=fileInfo;

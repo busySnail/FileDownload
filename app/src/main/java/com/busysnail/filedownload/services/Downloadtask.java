@@ -34,14 +34,11 @@ public class DownloadTask {
     private Context mContext;
     private FileInfo mFileInfo;
     private IThreadDAO mDao;
-//    private volatile long mFinished = 0;
     private AtomicLong mFinished=new AtomicLong(0);
     private boolean isPause = false;
     private int mThreadCount =1;
     private List<DownloadThread> mDownloadThreadList;
     public static ExecutorService sThreadPool = Executors.newCachedThreadPool();
-////    //将原来的在各下载线程通过计算时间的的更新进度方法替换整个任务的定时器，减少线程计算，避免点击按钮无响应情况，优化
-//     public static Timer mTimer = new Timer();
     private Messenger mMessenger;
 
     public DownloadTask(Context mContext,Messenger mMessenger, FileInfo mFileInfo, int mThreadCount) {
@@ -80,23 +77,6 @@ public class DownloadTask {
             DownloadTask.sThreadPool.execute(thread);
             mDownloadThreadList.add(thread);
         }
-//        //启动定时任务
-//        mTimer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//
-//                Message msg=new Message();
-//                msg.what=DownloadService.MSG_UPDATE;
-//                msg.arg1= (int) (mFinished * 100 / mFileInfo.getLength());
-//                msg.arg2=mFileInfo.getId();
-//                try {
-//                    mMessenger.send(msg);
-//                } catch (RemoteException e) {
-//                    e.printStackTrace();
-//                }
-//
-//            }
-//        }, 1000, 1000);
     }
 
     public void setPause(boolean pause) {
@@ -143,9 +123,6 @@ public class DownloadTask {
                 randomAccessFile = new RandomAccessFile(file, "rwd");
                 randomAccessFile.seek(start);
 
-//                //开始下载
-//                Intent intent = new Intent(DownloadService.ACTION_UPDATE);
-//                mFinished += mThreadInfo.getFinished();
                 mFinished.getAndAdd(mThreadInfo.getFinished());
 
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_PARTIAL) {
@@ -156,9 +133,7 @@ public class DownloadTask {
                     while ((len = input.read(buffer)) != -1) {
                         //写入文件
                         randomAccessFile.write(buffer, 0, len);
-                        //把下载进度通过广播发送给Activity
-                        //累加整个文件完成进度
-//                        mFinished += len;
+
                         mFinished.getAndAdd(len);
                         //累加每个线程完成的进度
                         mThreadInfo.setFinished(mThreadInfo.getFinished() + len);
@@ -166,7 +141,6 @@ public class DownloadTask {
                             time=System.currentTimeMillis();
                             //这里踩过的坑，f如果设置为long，那么传入putExtra会被截断，小整数总会被截断为0，使得进度更新失败
                             int f= (int) (mFinished.get()*100/mFileInfo.getLength());
-//                            Log.i("busysnail","downloadtask finished :"+f);
 
                             Message msg=new Message();
                             msg.what=DownloadService.MSG_UPDATE;
@@ -215,14 +189,8 @@ public class DownloadTask {
         }
 
         if (allFinished) {
-//            //取消定时器
-//            mTimer.cancel();
             //下载完成后，线程信息就没用了，可以删除
             mDao.deleteThread(mFileInfo.getUrl());
-//            //发送广播通知UI下载任务结束
-//            Intent intent = new Intent(DownloadService.ACTION_FINISHED);
-//            intent.putExtra(DownloadService.FILEINFO, mFileInfo);
-//            mContext.sendBroadcast(intent);
             Message msg=new Message();
             msg.what=DownloadService.MSG_FINISHED;
             msg.obj=mFileInfo;

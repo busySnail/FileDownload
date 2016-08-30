@@ -1,10 +1,7 @@
 package com.busysnail.filedownload;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,10 +14,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.busysnail.filedownload.entity.FileInfo;
@@ -28,14 +23,13 @@ import com.busysnail.filedownload.services.DownloadService;
 import com.busysnail.filedownload.utils.NotificationUtil;
 
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
 
-    private RecyclerView mLvFile;
+    private RecyclerView mRvList;
     private List<FileInfo> mFileList;
 //    private FileListAdapter mAdapter;
     private RecyclerAdapter mAdapter;
@@ -84,12 +78,10 @@ public class MainActivity extends AppCompatActivity {
 
         initData();
         initViews();
-//        initReceiver();
 
-//        mAdapter = new FileListAdapter(this, mFileList);
         mAdapter=new RecyclerAdapter(this,mFileList);
-        mLvFile.setLayoutManager(new LinearLayoutManager(this));
-        mLvFile.setAdapter(mAdapter);
+        mRvList.setLayoutManager(new LinearLayoutManager(this));
+        mRvList.setAdapter(mAdapter);
 
         mNotificationUtil=new NotificationUtil(this);
         //绑定Service
@@ -128,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void initViews() {
-        mLvFile = (RecyclerView) findViewById(R.id.lv_file);
+        mRvList = (RecyclerView) findViewById(R.id.lv_file);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(R.string.toolbar_title);
         toolbar.setSubtitle(R.string.toolbar_subtitle);
@@ -136,14 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-//    private void initReceiver() {
-//        //注册更新UI的广播接收器
-//        IntentFilter filter = new IntentFilter();
-//        filter.addAction(DownloadService.ACTION_START);
-//        filter.addAction(DownloadService.ACTION_UPDATE);
-//        filter.addAction(DownloadService.ACTION_FINISHED);
-//        registerReceiver(mReceiver, filter);
-//    }
+
 
     void initData() {
 
@@ -165,12 +150,7 @@ public class MainActivity extends AppCompatActivity {
         mFileList.add(fileInfo4);
     }
 
-//
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        unregisterReceiver(mReceiver);
-//    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -181,12 +161,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -194,30 +170,4 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-//    BroadcastReceiver mReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            if (DownloadService.ACTION_START.equals(intent.getAction())) {
-//                FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
-//                mNotificationUtil.showNotification(fileInfo);
-//
-//            } else if (DownloadService.ACTION_UPDATE.equals(intent.getAction())) {
-//                int finished = intent.getIntExtra(DownloadService.FINISHED_RATIO, 0);
-//                Log.i("busysnail", "MainActivity finished: " + finished + "");
-//                int fileId = intent.getIntExtra(DownloadService.FILE_ID, 0);
-//                mAdapter.updateProgress(fileId, finished);
-//                //更新通知
-//                mNotificationUtil.updateNotification(fileId,finished);
-//            } else if (DownloadService.ACTION_FINISHED.equals(intent.getAction())) {
-//                //下载成功，更新进度为0
-//                FileInfo fileInfo = (FileInfo) intent.getSerializableExtra(DownloadService.FILEINFO);
-//                mAdapter.updateProgress(fileInfo.getId(), 0);
-//                Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
-//
-//                //取消通知
-//                mNotificationUtil.cancelNotification(fileInfo.getId());
-//
-//            }
-//        }
-//    };
 }

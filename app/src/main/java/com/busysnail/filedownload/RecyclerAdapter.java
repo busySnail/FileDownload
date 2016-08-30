@@ -73,10 +73,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
                     holder.mBtnStart.setEnabled(false);
                     holder.mBtnStop.setEnabled(true);
                     holder.mTvProgress.setVisibility(View.VISIBLE);
-//				Intent intent = new Intent(mContext, DownloadService.class);
-//				intent.setAction(DownloadService.ACTION_START);
-//				intent.putExtra(DownloadService.FILEINFO,fileInfo);
-//				mContext.startService(intent);
+
                     Message msg=new Message();
                     msg.what= DownloadService.MSG_START;
                     msg.obj=fileInfo;
@@ -94,10 +91,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHo
                 public void onClick(View v) {
                     holder.mBtnStop.setEnabled(false);
                     holder.mBtnStart.setEnabled(true);
-//				Intent intent = new Intent(mContext, DownloadService.class);
-//				intent.setAction(DownloadService.ACTION_STOP);
-//				intent.putExtra(DownloadService.FILEINFO, fileInfo);
-//				mContext.startService(intent);
+
                     Message msg=new Message();
                     msg.what=DownloadService.MSG_STOP;
                     msg.obj=fileInfo;

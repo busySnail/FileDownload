@@ -48,32 +48,7 @@ public class DownloadService extends Service {
     //下载任务的集合 <文件ID，下载任务>
     private Map<Integer, DownloadTask> mTasks = new LinkedHashMap<>();
     private Messenger mActivityMessenger;
-    private final String TAG="busysnail";
-
-//    @Override
-//    public int onStartCommand(Intent intent, int flags, int startId) {
-//
-//
-//        if(ACTION_START.equals(intent.getAction())){
-//            //获得activity传来的参数
-//            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
-////            if(task!=null){
-////                task.setPause(false);
-////            }
-//            //启动初始化线程
-//            InitThread thread= new InitThread(fileInfo);
-//            thread.start();
-//        }else if(ACTION_STOP.equals(intent.getAction())){
-//            //获得activity传来的参数
-//            FileInfo fileInfo= (FileInfo) intent.getSerializableExtra(FILEINFO);
-//            DownloadTask task=mTasks.get(fileInfo.getId());
-//            if(task!=null){
-//                task.setPause(true);
-//            }
-//        }
-//        return super.onStartCommand(intent,flags,startId);
-//    }
-
+    private final String TAG = "busysnail";
 
     Handler mHandler = new Handler() {
         @Override
@@ -82,22 +57,18 @@ public class DownloadService extends Service {
             DownloadTask task = null;
             switch (msg.what) {
                 case MSG_INIT:
-                    Log.i(TAG,"服务接收到init完成,启动下载任务");
+                    Log.i(TAG, "服务接收到init完成,启动下载任务");
                     fileInfo = (FileInfo) msg.obj;
                     //启动下载任务
                     task = new DownloadTask(DownloadService.this, mActivityMessenger, fileInfo, THREAD_COUNT);
                     task.download();
                     //把下载任务添加到集合中
                     mTasks.put(fileInfo.getId(), task);
-//                    //发送启动命令的广播
-//                    Intent intent=new Intent(DownloadService.ACTION_START);
-//                    intent.putExtra(DownloadService.FILEINFO,fileInfo);
-//                    sendBroadcast(intent);
 
                     Message msg1 = new Message();
                     msg1.what = MSG_START;
                     msg1.obj = fileInfo;
-                    Log.i(TAG,"服务接收到init完成,启动下载任务,通知Activity MSG_START  fileinfo:"+fileInfo);
+                    Log.i(TAG, "服务接收到init完成,启动下载任务,通知Activity MSG_START  fileinfo:" + fileInfo);
                     try {
                         mActivityMessenger.send(msg1);
                     } catch (RemoteException e) {
@@ -106,11 +77,11 @@ public class DownloadService extends Service {
                     break;
                 case MSG_BIND:
                     //处理绑定的Messenger
-                    Log.i(TAG,"服务接收ActivityMessenger");
+                    Log.i(TAG, "服务接收ActivityMessenger");
                     mActivityMessenger = msg.replyTo;
                     break;
                 case MSG_START:
-                    Log.i(TAG,"服务接收按钮Start动作，执行init");
+                    Log.i(TAG, "服务接收按钮Start动作，执行init");
                     //获得activity传来的参数
                     fileInfo = (FileInfo) msg.obj;
                     //启动初始化线程
@@ -118,7 +89,7 @@ public class DownloadService extends Service {
                     thread.start();
                     break;
                 case MSG_STOP:
-                    Log.i(TAG,"服务接收按钮Start动作，执行暂停");
+                    Log.i(TAG, "服务接收按钮Start动作，执行暂停");
                     //获得activity传来的参数
                     fileInfo = (FileInfo) msg.obj;
                     task = mTasks.get(fileInfo.getId());
@@ -172,7 +143,7 @@ public class DownloadService extends Service {
                 //设置文件长度
                 randomAccessFile.setLength(length);
 
-                Log.i(TAG,"init执行完毕，发送MSG_INIT和fileinfo");
+                Log.i(TAG, "init执行完毕，发送MSG_INIT和fileinfo");
                 mFileInfo.setLength(length);
                 mHandler.obtainMessage(MSG_INIT, mFileInfo).sendToTarget();
 
@@ -192,7 +163,7 @@ public class DownloadService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG,"接收绑定，返回handler");
+        Log.i(TAG, "接收绑定，返回handler");
         //创建一个Messenger对象
         Messenger messenger = new Messenger(mHandler);
         //返回Messenger的Binder
