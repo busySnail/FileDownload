@@ -2,6 +2,10 @@
 ##感谢 慕课网XRay_Chen老师的[Android-Service断点续传系列课程](http://www.imooc.com/u/1395824/courses?sort=publish)
 
 ##说明
+<<<<<<< HEAD
+=======
+	感谢慕课网XRay_Chen老师的[Android-Service]断点续传系列课程(http://www.imooc.com/u/1395824/courses?sort=publish)
+>>>>>>> e6f70bc62cf807ccf4ec59f019796c392292043a
 	断点续传指的就是我们可以随时停止我们的下载任务，当下次再次开始的时候，可以从上次下载到的位置继续下载，节省下载时间，
 	很方便也很实用，做法就是在下载的过程中，纪录下下载到的位置，当再次开始下载的时候，我们从上一次的位置继续请求服务器即可。
 
