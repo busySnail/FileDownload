@@ -25,7 +25,7 @@ import java.util.Map;
 public class NotificationUtil {
     private Context mContext;
     private NotificationManager mNotificationManager;
-   //通知集合<文件ID,notification>
+    //通知集合<文件ID,notification>
     private Map<Integer,Notification> mNotifications;
 
     public NotificationUtil(Context context) {
@@ -60,17 +60,17 @@ public class NotificationUtil {
             //设置textview
             remoteViews.setTextViewText(R.id.notify_tv_filename,fileInfo.getFilename());
             //设置按钮操作
-            Intent intentStart=new Intent(mContext, DownloadService.class);
-            intentStart.setAction(DownloadService.ACTION_START);
-            intentStart.putExtra(DownloadService.FILEINFO,fileInfo);
-            PendingIntent piStart=PendingIntent.getActivity(mContext,0,intentStart,0);
-            remoteViews.setOnClickPendingIntent(R.id.notify_btn_start,piStart);
+//            Intent intentStart=new Intent(mContext, DownloadService.class);
+//            intentStart.setAction(DownloadService.ACTION_START);
+//            intentStart.putExtra(DownloadService.FILEINFO,fileInfo);
+//            PendingIntent piStart=PendingIntent.getActivity(mContext,0,intentStart,0);
+//            remoteViews.setOnClickPendingIntent(R.id.notify_btn_start,piStart);
 
-            Intent intentStop=new Intent(mContext, DownloadService.class);
-            intentStart.setAction(DownloadService.ACTION_STOP);
-            intentStart.putExtra(DownloadService.FILEINFO,fileInfo);
-            PendingIntent piStop=PendingIntent.getActivity(mContext,0,intentStop,0);
-            remoteViews.setOnClickPendingIntent(R.id.notify_btn_stop,piStop);
+//            Intent intentStop=new Intent(mContext, DownloadService.class);
+//            intentStart.setAction(DownloadService.ACTION_STOP);
+//            intentStart.putExtra(DownloadService.FILEINFO,fileInfo);
+//            PendingIntent piStop=PendingIntent.getActivity(mContext,0,intentStop,0);
+//            remoteViews.setOnClickPendingIntent(R.id.notify_btn_stop,piStop);
             //将RemoteViews设置到notification
             notification.contentView=remoteViews;
             //发出通知，并加入集合

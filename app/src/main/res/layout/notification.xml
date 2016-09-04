@@ -3,22 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="horizontal">
 
-    <TextView
-        android:id="@+id/notify_tv_filename"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        tools:text="name" />
-    
+
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/notify_tv_filename"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            tools:text="name" />
         <RelativeLayout
-            android:layout_width="0dp"
-            android:layout_weight="2"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="4dp">
 
@@ -43,27 +43,12 @@
 
         </RelativeLayout>
 
-        <Button
-            android:id="@+id/notify_btn_start"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="@string/download_start" />
-
-        <Button
-            android:id="@+id/notify_btn_stop"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginStart="16dp"
-            android:text="@string/download_pause" />
 
 
 
     </LinearLayout>
+
+
 
 
 </LinearLayout>
