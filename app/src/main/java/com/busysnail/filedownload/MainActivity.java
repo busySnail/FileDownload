@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView mRvList;
     private List<FileInfo> mFileList;
-//    private FileListAdapter mAdapter;
     private RecyclerAdapter mAdapter;
     private NotificationUtil mNotificationUtil;
     private Messenger mServiceMessenger;

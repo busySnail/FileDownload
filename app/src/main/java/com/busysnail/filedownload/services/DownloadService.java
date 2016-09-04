@@ -26,14 +26,8 @@ import java.util.zip.InflaterOutputStream;
 
 public class DownloadService extends Service {
 
-    public static final String ACTION_START = "ACTION_START";
-    public static final String ACTION_STOP = "ACTION_STOP";
-    public static final String ACTION_UPDATE = "ACTION_UPDATE";
-    public static final String ACTION_FINISHED = "ACTION_FINISHED";
+
     public static final String DOWNLOAD_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/downloads/";
-    public static final String FINISHED_RATIO = "FINISHED_RATIO";
-    public static final String FILE_ID = "FILE_ID";
-    public static final String FILEINFO = "FILEINFO";
 
     public static final int MSG_INIT = 0x1;
     public static final int MSG_BIND = 0x2;
@@ -42,13 +36,11 @@ public class DownloadService extends Service {
     public static final int MSG_UPDATE = 0x5;
     public static final int MSG_FINISHED = 0x6;
 
-
     public static final int THREAD_COUNT = 3;
     //    private DownloadTask mTask;
     //下载任务的集合 <文件ID，下载任务>
     private Map<Integer, DownloadTask> mTasks = new LinkedHashMap<>();
     private Messenger mActivityMessenger;
-    private final String TAG = "busysnail";
 
     Handler mHandler = new Handler() {
         @Override
@@ -57,7 +49,6 @@ public class DownloadService extends Service {
             DownloadTask task = null;
             switch (msg.what) {
                 case MSG_INIT:
-                    Log.i(TAG, "服务接收到init完成,启动下载任务");
                     fileInfo = (FileInfo) msg.obj;
                     //启动下载任务
                     task = new DownloadTask(DownloadService.this, mActivityMessenger, fileInfo, THREAD_COUNT);
@@ -68,7 +59,6 @@ public class DownloadService extends Service {
                     Message msg1 = new Message();
                     msg1.what = MSG_START;
                     msg1.obj = fileInfo;
-                    Log.i(TAG, "服务接收到init完成,启动下载任务,通知Activity MSG_START  fileinfo:" + fileInfo);
                     try {
                         mActivityMessenger.send(msg1);
                     } catch (RemoteException e) {
@@ -77,11 +67,9 @@ public class DownloadService extends Service {
                     break;
                 case MSG_BIND:
                     //处理绑定的Messenger
-                    Log.i(TAG, "服务接收ActivityMessenger");
                     mActivityMessenger = msg.replyTo;
                     break;
                 case MSG_START:
-                    Log.i(TAG, "服务接收按钮Start动作，执行init");
                     //获得activity传来的参数
                     fileInfo = (FileInfo) msg.obj;
                     //启动初始化线程
@@ -89,7 +77,6 @@ public class DownloadService extends Service {
                     thread.start();
                     break;
                 case MSG_STOP:
-                    Log.i(TAG, "服务接收按钮Start动作，执行暂停");
                     //获得activity传来的参数
                     fileInfo = (FileInfo) msg.obj;
                     task = mTasks.get(fileInfo.getId());
@@ -143,7 +130,6 @@ public class DownloadService extends Service {
                 //设置文件长度
                 randomAccessFile.setLength(length);
 
-                Log.i(TAG, "init执行完毕，发送MSG_INIT和fileinfo");
                 mFileInfo.setLength(length);
                 mHandler.obtainMessage(MSG_INIT, mFileInfo).sendToTarget();
 
@@ -163,7 +149,6 @@ public class DownloadService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG, "接收绑定，返回handler");
         //创建一个Messenger对象
         Messenger messenger = new Messenger(mHandler);
         //返回Messenger的Binder

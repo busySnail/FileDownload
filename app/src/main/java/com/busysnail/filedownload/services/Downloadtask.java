@@ -31,23 +31,21 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 public class DownloadTask {
-    private Context mContext;
     private FileInfo mFileInfo;
     private IThreadDAO mDao;
     private AtomicLong mFinished=new AtomicLong(0);
     private boolean isPause = false;
     private int mThreadCount =1;
     private List<DownloadThread> mDownloadThreadList;
-    public static ExecutorService sThreadPool = Executors.newCachedThreadPool();
+    public static  ExecutorService sThreadPool ;
     private Messenger mMessenger;
 
     public DownloadTask(Context mContext,Messenger mMessenger, FileInfo mFileInfo, int mThreadCount) {
-        this.mContext = mContext;
         this.mMessenger=mMessenger;
         this.mFileInfo = mFileInfo;
         this.mThreadCount = mThreadCount;
         mDao = new ThreadDAOImpl(mContext);
-
+       sThreadPool = Executors.newCachedThreadPool();
     }
 
     public void download() {

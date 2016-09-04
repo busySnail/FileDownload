@@ -16,21 +16,6 @@ import java.io.IOException;
 public class Util {
 
     /**
-     * 只关注是否联网
-     */
-    public static boolean isNetworkConnected(Context context) {
-        if (context != null) {
-            ConnectivityManager mConnectivityManager =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
-            if (mNetworkInfo != null) {
-                return mNetworkInfo.isAvailable();
-            }
-        }
-        return false;
-    }
-
-    /**
      * Java 中有一个 Closeable 接口,标识了一个可关闭的对象,它只有一个 close 方法.
      */
     public static void closeQuietly(Closeable s){
