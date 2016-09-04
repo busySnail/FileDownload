@@ -1,8 +1,9 @@
 #  FileDownload
+##感谢 慕课网XRay_Chen老师的[Android-Service断点续传系列课程](http://www.imooc.com/u/1395824/courses?sort=publish)
+
 ##说明
-	感谢慕课网XRay_Chen老师的[Android-Service断点续传系列课程](http://www.imooc.com/u/1395824/courses?sort=publish)
 	断点续传指的就是我们可以随时停止我们的下载任务，当下次再次开始的时候，可以从上次下载到的位置继续下载，节省下载时间，
-	很方便也很实用，做法无非就是在下载的过程中，纪录下下载到的位置，当再次开始下载的时候，我们从上一次的位置继续请求服务器即可。
+	很方便也很实用，做法就是在下载的过程中，纪录下下载到的位置，当再次开始下载的时候，我们从上一次的位置继续请求服务器即可。
 
 ##演示
   ![](https://github.com/busySnail/FileDownload/blob/master/resource/demo.gif)
@@ -17,5 +18,9 @@
 	3.初始线程和工作线程、Service和MainActivity之间的消息传递是通过Messenger+Handler实现的。
 
 ##踩过的坑
-	1.一开始更新UI采用在线程中发送Broadcast实现，当多个任务都开启（每个任务开启3个工作线程）时，界面非常卡顿。因为Broadcast比较重量，换成
+	1.一开始更新UI采用在线程中发送Broadcast实现，当多个任务开启（每个任务开启3个工作线程）时，界面非常卡顿。因为Broadcast比较重量，换成
 	Handler后界面响应快多了。
+	2.数据类型转换的坑，文件长度一开始用int，进度条出现很灵异的现象，（跳跃，超过100%），改为long后又出现一个被截断的错误，总之，类型转换
+	要格外小心，调试bug时转型前后打log
+	3.多个线程都需要访问数据库，要解决同步问题：（1）数据库帮助类设置为单例，保证个线程访问的是同一个数据库。（2）对数据库访问的更新、插入、
+	删除方法用synchronized进行同步。
