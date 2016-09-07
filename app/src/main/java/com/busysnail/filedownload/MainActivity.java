@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
         mRvList.setLayoutManager(new LinearLayoutManager(this));
         mRvList.setAdapter(mAdapter);
 
-//        mNotificationUtil = new NotificationUtil(this);
         mNotificationUtil=new NotificationUtil(this);
         mHandler= new ActivityHandler(this);
 
