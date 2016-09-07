@@ -1,8 +1,5 @@
 package com.busysnail.filedownload.utils;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 
 import java.io.Closeable;
 import java.io.IOException;

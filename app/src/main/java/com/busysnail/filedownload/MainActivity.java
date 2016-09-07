@@ -23,6 +23,7 @@ import com.busysnail.filedownload.services.DownloadService;
 import com.busysnail.filedownload.utils.NotificationUtil;
 
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,42 +34,9 @@ public class MainActivity extends AppCompatActivity {
     private List<FileInfo> mFileList;
     private RecyclerAdapter mAdapter;
     private NotificationUtil mNotificationUtil;
-    private Messenger mServiceMessenger;
-   private final String TAG="busysnail";
+    private final String TAG = "busysnail";
 
-    Handler mHandler=new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            FileInfo fileInfo=null;
-            switch (msg.what){
-                case DownloadService.MSG_UPDATE:
-                    int finished =msg.arg1;
-                    int fileId = msg.arg2;
-                    mAdapter.updateProgress(fileId, finished);
-                    //更新通知
-                    mNotificationUtil.updateNotification(fileId,finished);
-                    break;
-                case DownloadService.MSG_FINISHED:
-                    //下载成功，更新进度为0
-                     fileInfo = (FileInfo) msg.obj;
-                    mAdapter.updateProgress(fileInfo.getId(), 0);
-                    Toast.makeText(MainActivity.this, mFileList.get(fileInfo.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT).show();
-
-                    //取消通知
-                    mNotificationUtil.cancelNotification(fileInfo.getId());
-                    break;
-                case DownloadService.MSG_START:
-
-                    fileInfo = (FileInfo) msg.obj;
-                    Log.i(TAG,"接收服务开始下载的MSG_START，显示通知:(FileInfo) msg.obj:"+fileInfo);
-                    mNotificationUtil.showNotification(fileInfo);
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
-
+    private Handler mHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,32 +46,41 @@ public class MainActivity extends AppCompatActivity {
         initData();
         initViews();
 
-        mAdapter=new RecyclerAdapter(this,mFileList);
+        mAdapter = new RecyclerAdapter(this, mFileList);
         mRvList.setLayoutManager(new LinearLayoutManager(this));
         mRvList.setAdapter(mAdapter);
 
+//        mNotificationUtil = new NotificationUtil(this);
         mNotificationUtil=new NotificationUtil(this);
+        mHandler= new ActivityHandler(this);
+
         //绑定Service
-        Intent intent=new Intent(this,DownloadService.class);
-        Log.i(TAG,"绑定服务");
-        bindService(intent,mConnection, DownloadService.BIND_AUTO_CREATE);
+        Intent intent = new Intent(this, DownloadService.class);
+        Log.i(TAG, "绑定服务");
+        bindService(intent, mConnection, DownloadService.BIND_AUTO_CREATE);
 
     }
 
-    ServiceConnection mConnection=new ServiceConnection() {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mHandler.removeCallbacksAndMessages(null);
+    }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mServiceMessenger=new Messenger(service);
-            Log.i(TAG,"接收ServiceHandler");
+             Messenger mServiceMessenger= new Messenger(service);
+            Log.i(TAG, "接收ServiceHandler");
             //传给适配器
             mAdapter.setMessenger(mServiceMessenger);
             //创建Activity中的messenger
-            Messenger messenger=new Messenger(mHandler);
+            Messenger messenger = new Messenger(mHandler);
             //创建Message
-            Message msg=new Message();
-            msg.what=DownloadService.MSG_BIND;
-            msg.replyTo=messenger;
-            Log.i(TAG,"发送ActivityMessenger");
+            Message msg = new Message();
+            msg.what = DownloadService.MSG_BIND;
+            msg.replyTo = messenger;
+            Log.i(TAG, "发送ActivityMessenger");
             //使用Service的Messenger发送Activity中的Messenger
             try {
                 mServiceMessenger.send(msg);
@@ -121,15 +98,17 @@ public class MainActivity extends AppCompatActivity {
     private void initViews() {
         mRvList = (RecyclerView) findViewById(R.id.lv_file);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle(R.string.toolbar_title);
-        toolbar.setSubtitle(R.string.toolbar_subtitle);
-        setSupportActionBar(toolbar);
+        if(toolbar!=null){
+            toolbar.setTitle(R.string.toolbar_title);
+            toolbar.setSubtitle(R.string.toolbar_subtitle);
+            setSupportActionBar(toolbar);
+        }
+
 
     }
 
 
-
-    void initData() {
+   private void initData() {
 
         mFileList = new ArrayList<>();
 
@@ -150,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -167,6 +145,49 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private static class ActivityHandler extends Handler {
+        private WeakReference<MainActivity> activityWeakReference;
+        private RecyclerAdapter adapter;
+        private NotificationUtil notificationUtil;
+
+        ActivityHandler(MainActivity activity) {
+            this.activityWeakReference = new WeakReference<>(activity);
+            adapter = this.activityWeakReference.get().mAdapter;
+            notificationUtil = this.activityWeakReference.get().mNotificationUtil;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case DownloadService.MSG_UPDATE:
+                    int finished = msg.arg1;
+                    int fileId = msg.arg2;
+                    adapter.updateProgress(fileId, finished);
+                    //更新通知
+                    notificationUtil.updateNotification(fileId, finished);
+                    break;
+                case DownloadService.MSG_FINISHED:
+                    //下载成功，更新进度为0
+                    FileInfo fileInfoFinished = (FileInfo) msg.obj;
+                    adapter.updateProgress(fileInfoFinished.getId(), 0);
+                    Toast.makeText(activityWeakReference.get(),
+                            activityWeakReference.get().mFileList.get(fileInfoFinished.getId()).getFilename() + "下载完毕\n" + "存储位置：" + DownloadService.DOWNLOAD_PATH, Toast.LENGTH_SHORT)
+                            .show();
+
+                    //取消通知
+                    notificationUtil.cancelNotification(fileInfoFinished.getId());
+                    break;
+                case DownloadService.MSG_START:
+                    FileInfo fileInfoStart = (FileInfo) msg.obj;
+                    Log.i("busysnail","接收MSG_START"+fileInfoStart+" notificationUtil "+notificationUtil);
+                    notificationUtil.showNotification(fileInfoStart);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
 }

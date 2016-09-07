@@ -5,14 +5,14 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.busysnail.filedownload.MainActivity;
 import com.busysnail.filedownload.R;
 import com.busysnail.filedownload.entity.FileInfo;
-import com.busysnail.filedownload.services.DownloadService;
 
-import java.io.File;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,22 +23,25 @@ import java.util.Map;
  */
 
 public class NotificationUtil {
-    private Context mContext;
+    private  Context mContext;
     private NotificationManager mNotificationManager;
     //通知集合<文件ID,notification>
     private Map<Integer,Notification> mNotifications;
 
     public NotificationUtil(Context context) {
-        mContext=context;
+        mContext=context.getApplicationContext();
         mNotificationManager= (NotificationManager) mContext.getSystemService(context.NOTIFICATION_SERVICE);
         mNotifications=new HashMap<>();
     }
+
+
 
     /**
      * 显示通知
      * @param fileInfo
      */
     public void showNotification(FileInfo fileInfo){
+        Log.i("busysnail","接收MSG_START showNotification"+fileInfo);
         //判断该文件通知是否已经显示,没有的话创建
         if(!mNotifications.containsKey(fileInfo.getId())){
             Notification notification=new Notification();

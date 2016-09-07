@@ -17,6 +17,7 @@ import com.busysnail.filedownload.utils.Util;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedHashMap;
@@ -40,65 +41,26 @@ public class DownloadService extends Service {
     //    private DownloadTask mTask;
     //下载任务的集合 <文件ID，下载任务>
     private Map<Integer, DownloadTask> mTasks = new LinkedHashMap<>();
-    private Messenger mActivityMessenger;
+    private ServiceHandler mHandler;
 
-    Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            FileInfo fileInfo = null;
-            DownloadTask task = null;
-            switch (msg.what) {
-                case MSG_INIT:
-                    fileInfo = (FileInfo) msg.obj;
-                    //启动下载任务
-                    task = new DownloadTask(DownloadService.this, mActivityMessenger, fileInfo, THREAD_COUNT);
-                    task.download();
-                    //把下载任务添加到集合中
-                    mTasks.put(fileInfo.getId(), task);
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mHandler=new ServiceHandler(this);
+    }
 
-                    Message msg1 = new Message();
-                    msg1.what = MSG_START;
-                    msg1.obj = fileInfo;
-                    try {
-                        mActivityMessenger.send(msg1);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case MSG_BIND:
-                    //处理绑定的Messenger
-                    mActivityMessenger = msg.replyTo;
-                    break;
-                case MSG_START:
-                    //获得activity传来的参数
-                    fileInfo = (FileInfo) msg.obj;
-                    //启动初始化线程
-                    InitThread thread = new InitThread(fileInfo);
-                    thread.start();
-                    break;
-                case MSG_STOP:
-                    //获得activity传来的参数
-                    fileInfo = (FileInfo) msg.obj;
-                    task = mTasks.get(fileInfo.getId());
-                    if (task != null) {
-                        task.setPause(true);
-                    }
-                    break;
-                default:
-                    break;
-            }
 
-        }
-    };
 
     /**
      * 初始化子线程
      */
-    class InitThread extends Thread {
+    private static class InitThread extends Thread {
         private FileInfo mFileInfo;
+        WeakReference<DownloadService> serviceWeakReference;
 
-        public InitThread(FileInfo mFileInfo) {
+         InitThread(FileInfo mFileInfo,WeakReference<DownloadService> service) {
             this.mFileInfo = mFileInfo;
+            serviceWeakReference=service;
         }
 
         @Override
@@ -131,7 +93,7 @@ public class DownloadService extends Service {
                 randomAccessFile.setLength(length);
 
                 mFileInfo.setLength(length);
-                mHandler.obtainMessage(MSG_INIT, mFileInfo).sendToTarget();
+                serviceWeakReference.get().mHandler.obtainMessage(MSG_INIT, mFileInfo).sendToTarget();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -153,5 +115,67 @@ public class DownloadService extends Service {
         Messenger messenger = new Messenger(mHandler);
         //返回Messenger的Binder
         return messenger.getBinder();
+    }
+
+    private static class ServiceHandler extends Handler{
+        private WeakReference<DownloadService> serviceWeakReference;
+        private Messenger activityMessenger;
+
+        ServiceHandler(DownloadService service){
+            serviceWeakReference=new WeakReference<>(service);
+
+        }
+        @Override
+        public void handleMessage(Message msg) {
+            FileInfo fileInfo = null;
+            DownloadTask task = null;
+            switch (msg.what) {
+                case MSG_INIT:
+                    fileInfo = (FileInfo) msg.obj;
+                    //启动下载任务
+                    task = new DownloadTask(serviceWeakReference.get(), activityMessenger, fileInfo, THREAD_COUNT);
+                    task.download();
+                    //把下载任务添加到集合中
+                    serviceWeakReference.get().mTasks.put(fileInfo.getId(), task);
+
+                    Message msg1 = new Message();
+                    msg1.what = MSG_START;
+                    msg1.obj = fileInfo;
+                    try {
+                        activityMessenger.send(msg1);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case MSG_BIND:
+                    //处理绑定的Messenger
+                    activityMessenger = msg.replyTo;
+                    break;
+                case MSG_START:
+                    //获得activity传来的参数
+                    fileInfo = (FileInfo) msg.obj;
+                    //启动初始化线程
+                    InitThread thread = new InitThread(fileInfo,serviceWeakReference);
+                    thread.start();
+                    break;
+                case MSG_STOP:
+                    //获得activity传来的参数
+                    fileInfo = (FileInfo) msg.obj;
+                    task =  serviceWeakReference.get().mTasks.get(fileInfo.getId());
+                    if (task != null) {
+                        task.setPause(true);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mHandler.removeCallbacksAndMessages(null);
     }
 }
